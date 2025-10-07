@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel ="stylesheet" href="{{url_for('static', filename='css/main.css')}}">
+  <title>Rewatch — учёт фильмов, сериалов и аниме</title>
+</head>
+<body>
+  <header>
+    <h1><a href="{{ url_for('index') }}" class="logo">Rewatch</a></h1>
+    <nav>
+        <a href="{{ url_for('catalog') }}">Каталог</a>
+        <a href="{{ url_for('my_list') }}">Мой список</a>
+        <a href="{{ url_for('stats') }}">Статистика</a>
+        <a href="{{ url_for('profile') }}">Профиль</a>
+    </nav>
+  </header>
+
+  <section class="banner">
+    <h2>Один трекер для всех миров — кино, сериалов и аниме</h2>
+    <p>Управляй своими просмотрами, отмечай любимое и открывай новое в едином пространстве. Интеграции с TMDb, AnimeDb и Telegram помогают не потеряться среди вселенных контента.</p>
+    <button class="btn-primary">Начать учёт</button>
+  </section>
+
+  <section class="features">
+    <div class="feature-card">
+      <h3>🎞️ Единая библиотека</h3>
+      <p>Добавляй фильмы, сериалы, аниме и мультфильмы в одном профиле.</p>
+    </div>
+    <div class="feature-card">
+      <h3>⭐ Оценки и прогресс</h3>
+      <p>Отмечай просмотренное, ставь оценки и отслеживай свой прогресс.</p>
+    </div>
+    <div class="feature-card">
+      <h3>🤖 Интеграции</h3>
+      <p>Импорт данных из TMDb и AnimeDb, напоминания через Telegram.</p>
+    </div>
+  </section>
+
+  <section class="profile-preview">
+    <img src="https://i.pravatar.cc/100" alt="avatar" />
+    <h3>@glebpidor</h3>
+    <p>📺 Недавно просмотрено: <strong>"Spirited Away"</strong></p>
+    <p>⭐ Средняя оценка: 8.7 | 🎬 126 тайтлов</p>
+  </section>
+
+  <footer>
+    <p>© 2025 Rewatch | vxksgxny</p>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,174 @@
+/* ---------- PROFILE PAGE ---------- */
+
+.profile-page {
+  max-width: 900px;
+  margin: 3rem auto;
+  padding: 0 2rem;
+}
+
+/* Верхняя секция профиля */
+.profile-header {
+  display: flex;
+  align-items: center;
+  background-color: #181818;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 0 15px #00000040;
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+
+.profile-header .avatar img {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 3px solid #5b7abd;
+  object-fit: cover;
+}
+
+.profile-info h2 {
+  color: #638cc0;
+  font-size: 1.6rem;
+  margin-bottom: 0.5rem;
+}
+
+.profile-info p {
+  margin: 0.3rem 0;
+  color: #bbb;
+}
+
+.btn-secondary {
+  background-color: transparent;
+  color: #638cc0;
+  border: 1px solid #638cc0;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 0.8rem;
+}
+
+.btn-secondary:hover {
+  background-color: #638cc0;
+  color: #fff;
+}
+
+/* Статистика */
+.profile-stats h3 {
+  color: #638cc0;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.stat-card {
+  background-color: #181818;
+  border-radius: 10px;
+  padding: 1.5rem;
+  text-align: center;
+  box-shadow: 0 0 10px #00000030;
+}
+
+.stat-card h4 {
+  color: #5b7abd;
+  margin-bottom: 0.5rem;
+}
+
+/* Недавние просмотры */
+.recent-activity {
+  margin-bottom: 3rem;
+}
+
+.recent-activity h3 {
+  color: #638cc0;
+  margin-bottom: 1rem;
+}
+
+.activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.activity-item {
+  display: flex;
+  align-items: center;
+  background-color: #181818;
+  border-radius: 10px;
+  padding: 1rem;
+  box-shadow: 0 0 10px #00000030;
+}
+
+.activity-item img {
+  width: 70px;
+  height: 100px;
+  border-radius: 6px;
+  margin-right: 1rem;
+  object-fit: cover;
+}
+
+.activity-item h4 {
+  margin: 0;
+  color: #e0e0e0;
+}
+
+.activity-item p {
+  margin: 0.3rem 0 0;
+  color: #bbb;
+  font-size: 0.9rem;
+}
+
+/* Кнопки действий */
+.profile-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 4rem;
+}
+
+.btn-outline {
+  background: transparent;
+  border: 1px solid #5b7abd;
+  color: #5b7abd;
+  padding: 0.8rem 1.6rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-outline:hover {
+  background-color: #5b7abd;
+  color: #fff;
+}
+
+/* Адаптивность */
+@media (max-width: 700px) {
+  .profile-header {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .profile-header .avatar img {
+    width: 100px;
+    height: 100px;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .activity-item {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .activity-item img {
+    margin: 0 0 1rem 0;
+  }
+}

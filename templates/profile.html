@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
+  <title>Профиль — Rewatch</title>
+</head>
+<body>
+  <header>
+    <h1><a href="{{ url_for('index') }}" class="logo">Rewatch</a></h1>
+    <nav>
+      <a href="{{ url_for('catalog') }}">Каталог</a>
+      <a href="{{ url_for('my_list') }}">Мой список</a>
+      <a href="{{ url_for('stats') }}">Статистика</a>
+      <a href="{{ url_for('profile') }}" class="active">Профиль</a>
+    </nav>
+  </header>
+
+  <main class="profile-page">
+    <section class="profile-header">
+      <div class="avatar">
+        <img src="https://i.pravatar.cc/150" alt="Аватар пользователя" />
+      </div>
+      <div class="profile-info">
+        <h2>@glebpidor</h2>
+        <p>🎬 Зарегистрирован: <strong>январь 2025</strong></p>
+        <p>⭐ Средняя оценка: <strong>8.7</strong></p>
+        <p>📺 Всего тайтлов: <strong>126</strong></p>
+        <button class="btn-secondary">Редактировать профиль</button>
+      </div>
+    </section>
+
+    <section class="profile-stats">
+      <h3>Моя активность</h3>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <h4>Фильмы</h4>
+          <p><strong>54</strong> просмотрено</p>
+        </div>
+        <div class="stat-card">
+          <h4>Сериалы</h4>
+          <p><strong>38</strong> просмотрено</p>
+        </div>
+        <div class="stat-card">
+          <h4>Аниме</h4>
+          <p><strong>34</strong> просмотрено</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="recent-activity">
+      <h3>Недавние просмотры</h3>
+      <div class="activity-list">
+        <div class="activity-item">
+          <img src="https://image.tmdb.org/t/p/w200/39wmItIWsg5sZMyRUHLkWBcuVCM.jpg" alt="Spirited Away">
+          <div>
+            <h4>Spirited Away</h4>
+            <p>⭐ 9 / 10 | 3 дня назад</p>
+          </div>
+        </div>
+        <div class="activity-item">
+          <img src="https://image.tmdb.org/t/p/w200/q719jXXEzOoYaps6babgKnONONX.jpg" alt="Your Name">
+          <div>
+            <h4>Your Name</h4>
+            <p>⭐ 8 / 10 | неделю назад</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="profile-actions">
+      <button class="btn-primary">Добавить тайтл</button>
+      <button class="btn-outline">Экспортировать список</button>
+    </section>
+  </main>
+
+  <footer>
+    <p>© 2025 Rewatch | vxksgxny</p>
+  </footer>
+</body>
+</html>
