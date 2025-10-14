@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <title>Регистрация — MovieTracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Стили -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/register.css') }}">
+</head>
+<body class="page-auth">
+  <div class="auth-card">
+    <div class="auth-card__header">
+      <span class="badge"><span class="badge__dot"></span> Регистрация</span>
+      <h1 class="auth-card__title">Создайте аккаунт</h1>
+      <p class="auth-card__subtitle">Собирайте список фильмов и смотрите статистику</p>
+    </div>
+
+    <div class="auth-card__body">
+      {% with msgs = get_flashed_messages(with_categories=true) %}
+        {% if msgs %}
+          {% for cat, m in msgs %}
+            <div class="flash {{ cat }}">{{ m }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <form class="auth-form" method="post" action="{{ url_for('register') }}">
+        <div class="form-row">
+          <label class="form-label" for="username">Логин</label>
+          <input class="form-input" id="username" name="username" required placeholder="cinephile" autocomplete="username">
+        </div>
+
+        <div class="form-row">
+          <label class="form-label" for="email">Email (необязательно)</label>
+          <input class="form-input" id="email" type="email" name="email" placeholder="you@example.com" autocomplete="email">
+        </div>
+
+        <div class="form-row">
+          <label class="form-label" for="password">Пароль</label>
+          <input class="form-input" id="password" type="password" name="password" required placeholder="••••••••" autocomplete="new-password">
+          <small class="form-help">Минимум 8 символов — буквы и цифры.</small>
+        </div>
+
+        <div class="form-row">
+          <label class="form-label" for="confirm">Повтор пароля</label>
+          <input class="form-input" id="confirm" type="password" name="confirm" required placeholder="••••••••" autocomplete="new-password">
+        </div>
+
+        <div class="form-actions">
+          <button class="btn-primary" type="submit">Зарегистрироваться</button>
+          <p class="auth-meta">
+            Уже есть аккаунт?
+            <a class="auth-link" href="{{ url_for('login') }}">Войти</a>
+          </p>
+        </div>
+      </form>
+    </div>
+  </div>
+</body>
+</html>

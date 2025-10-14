@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <title>Редактировать профиль — MovieTracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Стили -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/edit_profile.css') }}">
+</head>
+<body class="page-auth">
+  <div class="auth-card">
+    <div class="auth-card__header">
+      <h1 class="auth-card__title">Редактировать профиль</h1>
+      <p class="auth-card__subtitle">Обновите свои данные</p>
+    </div>
+
+    <div class="auth-card__body">
+      {% with msgs = get_flashed_messages(with_categories=true) %}
+        {% if msgs %}
+          {% for cat, m in msgs %}
+            <div class="flash {{ cat }}">{{ m }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <form class="auth-form" method="post" action="{{ url_for('edit_profile') }}" autocomplete="on">
+        {# Если используешь CSRF (Flask-WTF), раскомментируй: {{ form.csrf_token }} или {{ csrf_token() }} #}
+
+        <div class="form-row">
+          <label class="form-label" for="username">Логин</label>
+          <input class="form-input" id="username" name="username"
+                 value="{{ user.username }}" required autocomplete="username" placeholder="ваш_логин">
+        </div>
+
+        <div class="form-row">
+          <label class="form-label" for="email">Email</label>
+          <input class="form-input" id="email" type="email" name="email"
+                 value="{{ user.email or '' }}" autocomplete="email" placeholder="you@example.com">
+        </div>
+
+        <div class="form-row">
+          <label class="form-label" for="password">Новый пароль (необязательно)</label>
+          <input class="form-input" id="password" type="password" name="password"
+                 placeholder="Оставьте пустым, чтобы не менять" autocomplete="new-password">
+          <small class="form-help">Если поле пустое — пароль останется прежним.</small>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn-primary" type="submit">Сохранить</button>
+          <p class="auth-meta"><a class="auth-link" href="{{ url_for('profile') }}">Отмена</a></p>
+        </div>
+      </form>
+    </div>
+  </div>
+</body>
+</html>

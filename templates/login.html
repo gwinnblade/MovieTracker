@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <title>Вход — MovieTracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Стили -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+</head>
+<body class="page-auth">
+  <div class="auth-card">
+    <div class="auth-card__header">
+      <h1 class="auth-card__title">Вход</h1>
+      <p class="auth-card__subtitle">Продолжайте отслеживать фильмы и статистику</p>
+    </div>
+
+    <div class="auth-card__body">
+      {% with msgs = get_flashed_messages(with_categories=true) %}
+        {% if msgs %}
+          {% for cat, m in msgs %}
+            <div class="flash {{ cat }}">{{ m }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <form class="auth-form" method="post" action="{{ url_for('login', next=request.args.get('next')) }}">
+        <div class="form-row">
+          <label class="form-label" for="login">Логин или Email</label>
+          <input class="form-input" id="login" name="login" required placeholder="username или you@example.com" autocomplete="username">
+        </div>
+
+        <div class="form-row">
+          <label class="form-label" for="password">Пароль</label>
+          <input class="form-input" id="password" type="password" name="password" required placeholder="••••••••" autocomplete="current-password">
+        </div>
+
+        <div class="form-inline">
+          <label class="checkbox">
+            <input type="checkbox" name="remember"> Запомнить меня
+          </label>
+          <a class="link-muted" href="#">Забыли пароль?</a>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn-primary" type="submit">Войти</button>
+          <p class="auth-meta">
+            Нет аккаунта?
+            <a class="auth-link" href="{{ url_for('register') }}">Зарегистрироваться</a>
+          </p>
+        </div>
+      </form>
+    </div>
+  </div>
+</body>
+</html>

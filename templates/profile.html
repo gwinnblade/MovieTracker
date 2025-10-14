@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+      <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
   <title>Профиль — Rewatch</title>
 </head>
@@ -24,11 +24,10 @@
         <img src="https://i.pravatar.cc/150" alt="Аватар пользователя" />
       </div>
       <div class="profile-info">
-        <h2>@glebpidor</h2>
-        <p>🎬 Зарегистрирован: <strong>январь 2025</strong></p>
-        <p>⭐ Средняя оценка: <strong>8.7</strong></p>
-        <p>📺 Всего тайтлов: <strong>126</strong></p>
-        <button class="btn-secondary">Редактировать профиль</button>
+          <h1 class="profile__name">{{ user.username }}</h1>
+          <p>Регистрация: {{ user.created_at.strftime('%Y.%m.%d') }}</p>
+          <p>📺 Всего тайтлов: <strong>126</strong></p>
+          <a class="btn-primary" href="{{ url_for('edit_profile') }}">Редактировать профиль</a>
       </div>
     </section>
 
