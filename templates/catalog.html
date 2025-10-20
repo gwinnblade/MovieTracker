@@ -1,13 +1,61 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
-    <head>
-        <meta charset="UTF-8">
-        <meta http-equiv="X-UA-Compatible" content="ie=edge">
-        <link rel ="stylesheet" href="{{url_for('static', filename='css/main.css')}}">
-    <title>About me</title>
-    </head>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Каталог — MovieTracker</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}">
+</head>
+<body>
+  <div class="container">
+    <div class="toolbar">
+      <h1 style="margin:0">Каталог</h1>
+      <form action="{{ url_for('search_page') }}" method="get">
+        <input type="text" name="q" value="{{ q or '' }}" placeholder="Найти фильм или сериал…">
+        <button class="btn" type="submit">Поиск</button>
+      </form>
+    </div>
 
-    <body>
-        <h1>die already</h1>
-    </body>
+    <div class="tabs">
+      <a class="tab {{ 'active' if mtype == 'all' else '' }}" href="{{ url_for('catalog', type='all', page=1) }}">Все</a>
+      <a class="tab {{ 'active' if mtype == 'movie' else '' }}" href="{{ url_for('catalog', type='movie', page=1) }}">Фильмы</a>
+      <a class="tab {{ 'active' if mtype == 'tv' else '' }}" href="{{ url_for('catalog', type='tv', page=1) }}">Сериалы</a>
+    </div>
+
+    {% if items and items|length %}
+      <div class="grid">
+        {% for it in items %}
+          <a class="card" href="{{ url_for('title_page', media_type=it.media_type, tmdb_id=it.tmdb_id) }}">
+            {% if it.poster %}
+              <img class="poster" src="{{ it.poster }}" alt="{{ it.title }}">
+            {% else %}
+              <div class="poster placeholder">Нет постера</div>
+            {% endif %}
+            <div class="meta">
+              <div class="title">{{ it.title }}</div>
+              <div class="sub">
+                {{ it.year or '—' }} · ★ {{ '%.1f'|format(it.rating) if it.rating is not none else '—' }} · {{ 'Фильм' if it.media_type == 'movie' else 'Сериал' }}
+              </div>
+            </div>
+          </a>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <p>Тут пока пусто. Возможно, TMDB не вернул тренды или выбранная страница пуста.</p>
+        <p>Попробуйте выбрать другую вкладку или перейти на первую страницу.</p>
+      </div>
+    {% endif %}
+
+    <div class="pager">
+      {% set prev = (page or 1) - 1 %}
+      {% set next = (page or 1) + 1 %}
+      {% if prev >= 1 %}
+        <a class="btn" href="{{ url_for('catalog', type=mtype, page=prev) }}">&larr; Предыдущая</a>
+      {% endif %}
+      <a class="btn" href="{{ url_for('catalog', type=mtype, page=next) }}">Следующая &rarr;</a>
+    </div>
+  </div>
+</body>
 </html>

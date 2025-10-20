@@ -7,6 +7,17 @@
   <!-- Стили -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/edit_profile.css') }}">
+  <style>
+    /* Лёгкий локальный штрих: превью аватара рядом с подписью */
+    .avatar-preview {
+      display: flex; align-items: center; gap: .75rem;
+      margin-top: .35rem;
+    }
+    .avatar-preview__img {
+      width: 56px; height: 56px; border-radius: 50%;
+      object-fit: cover; border: 1px solid #222;
+    }
+  </style>
 </head>
 <body class="page-auth">
   <div class="auth-card">
@@ -46,6 +57,21 @@
           <small class="form-help">Если поле пустое — пароль останется прежним.</small>
         </div>
 
+        <!-- НОВОЕ: URL аватарки + превью -->
+        <div class="form-row">
+          <label class="form-label" for="avatar_url">Ссылка на аватар</label>
+          <input class="form-input" id="avatar_url" name="avatar_url"
+                 value="{{ user.avatar_url or '' }}" placeholder="https://.../avatar.jpg" autocomplete="url">
+          <div class="avatar-preview">
+            <img id="avatarPreviewImg"
+                 class="avatar-preview__img"
+                 src="{{ user.avatar_url or 'https://i.pravatar.cc/150' }}"
+                 alt="Превью аватара">
+            <small class="form-help">Текущее изображение профиля</small>
+          </div>
+        </div>
+        <!-- /НОВОЕ -->
+
         <div class="form-actions">
           <button class="btn-primary" type="submit">Сохранить</button>
           <p class="auth-meta"><a class="auth-link" href="{{ url_for('profile') }}">Отмена</a></p>
@@ -53,5 +79,25 @@
       </form>
     </div>
   </div>
+
+  <script>
+    // Живое превью аватара при изменении URL
+    (function () {
+      const input = document.getElementById('avatar_url');
+      const img = document.getElementById('avatarPreviewImg');
+      if (!input || !img) return;
+
+      const fallback = '{{ user.avatar_url or "https://i.pravatar.cc/150" }}';
+
+      const update = () => {
+        const url = (input.value || '').trim();
+        img.src = url || fallback;
+      };
+
+      input.addEventListener('input', update);
+      // подстраховка на blur — если ввод стёрт, вернуть плейсхолдер
+      input.addEventListener('blur', update);
+    })();
+  </script>
 </body>
 </html>

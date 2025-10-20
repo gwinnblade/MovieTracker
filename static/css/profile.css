@@ -131,6 +131,7 @@
 
 .profile-actions .btn-primary {
   display: inline-block;
+  text-align: center;
   background: var(--accent);
   color: white;
   text-decoration: none;
