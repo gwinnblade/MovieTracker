@@ -337,32 +337,29 @@ def search_page():
 @login_required
 def title_page(media_type, tmdb_id):
     if request.method == "POST":
-        # сохранить пользовательские поля
         um = UserMedia.query.filter_by(
-            user_id=current_user.id,
-            media_type=media_type,
-            tmdb_id=tmdb_id
+            user_id=current_user.id, media_type=media_type, tmdb_id=tmdb_id
         ).first()
         if not um:
             um = UserMedia(user_id=current_user.id, media_type=media_type, tmdb_id=tmdb_id)
             db.session.add(um)
 
-        # --- безопасная обработка данных из формы ---
+        # безопасный парсер
         def parse_int(value, default=None):
             try:
                 return int(value)
             except (TypeError, ValueError):
                 return default
 
-        raw_rating = request.form.get("rating")
-        rating = parse_int(raw_rating)
+        # рейтинг
+        rating = parse_int(request.form.get("rating"))
         if rating is not None and not (1 <= rating <= 10):
             flash("Рейтинг должен быть от 1 до 10.", "error")
             return redirect(url_for("title_page", media_type=media_type, tmdb_id=tmdb_id))
 
-        raw_progress = request.form.get("progress")
-        progress = parse_int(raw_progress, 0)
-        if progress < 0:
+        # прежний progress оставляем как есть (на будущее можно убрать из формы)
+        progress = parse_int(request.form.get("progress"), 0)
+        if progress is not None and progress < 0:
             progress = 0
 
         status = request.form.get("status") or None
@@ -370,22 +367,40 @@ def title_page(media_type, tmdb_id):
             flash("Некорректный статус.", "error")
             return redirect(url_for("title_page", media_type=media_type, tmdb_id=tmdb_id))
 
-        # --- сохраняем ---
         um.rating = rating
         um.progress = progress
         um.status = status
         um.note = request.form.get("note") or None
 
+        # НОВОЕ: поля для сериалов
+        if media_type == "tv":
+            # Получим лимиты из TMDB, чтобы зажать значения
+            info = details(media_type, tmdb_id)  # может уже быть в кэше, но вызов безопасен
+            max_seasons = info.get("number_of_seasons") or 0
+            max_episodes = info.get("number_of_episodes") or 0
+
+            seasons_watched  = parse_int(request.form.get("seasons_watched"), 0) or 0
+            episodes_watched = parse_int(request.form.get("episodes_watched"), 0) or 0
+
+            if seasons_watched < 0: seasons_watched = 0
+            if episodes_watched < 0: episodes_watched = 0
+            if max_seasons and seasons_watched > max_seasons: seasons_watched = max_seasons
+            if max_episodes and episodes_watched > max_episodes: episodes_watched = max_episodes
+
+            um.seasons_watched = seasons_watched
+            um.episodes_watched = episodes_watched
+        else:
+            # для фильмов эти поля сбрасывать не обязательно; можно оставить как есть
+            pass
+
         db.session.commit()
         flash("Сохранено!", "success")
         return redirect(url_for("title_page", media_type=media_type, tmdb_id=tmdb_id))
 
-    # --- GET-запрос ---
+    # --- GET ---
     info = details(media_type, tmdb_id)
     um = UserMedia.query.filter_by(
-        user_id=current_user.id,
-        media_type=media_type,
-        tmdb_id=tmdb_id
+        user_id=current_user.id, media_type=media_type, tmdb_id=tmdb_id
     ).first()
     ctx = {
         "media_type": media_type,

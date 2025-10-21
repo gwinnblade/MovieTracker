@@ -14,10 +14,10 @@
 
   <!-- НАВИГАЦИЯ -->
   <nav>
-    <a href="{{ url_for('catalog') }}">Каталог</a>
-    <a href="{{ url_for('my_list') }}">Мой список</a>
-    <a href="{{ url_for('stats') }}">Статистика</a>
-    <a href="{{ url_for('profile') }}" class="active">Профиль</a>
+    <a href="{{ url_for('catalog') }}"  class="{{ 'active' if request.endpoint=='catalog' else '' }}">Каталог</a>
+    <a href="{{ url_for('my_list') }}"  class="{{ 'active' if request.endpoint=='my_list' else '' }}">Мой список</a>
+    <a href="{{ url_for('stats') }}"    class="{{ 'active' if request.endpoint=='stats' else '' }}">Статистика</a>
+    <a href="{{ url_for('profile') }}"  class="{{ 'active' if request.endpoint in ['profile','edit_profile'] else '' }}">Профиль</a>
   </nav>
 </header>
 

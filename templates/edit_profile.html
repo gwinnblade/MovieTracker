@@ -7,17 +7,6 @@
   <!-- Стили -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/edit_profile.css') }}">
-  <style>
-    /* Лёгкий локальный штрих: превью аватара рядом с подписью */
-    .avatar-preview {
-      display: flex; align-items: center; gap: .75rem;
-      margin-top: .35rem;
-    }
-    .avatar-preview__img {
-      width: 56px; height: 56px; border-radius: 50%;
-      object-fit: cover; border: 1px solid #222;
-    }
-  </style>
 </head>
 <header>
 <header>
@@ -26,10 +15,10 @@
 
   <!-- НАВИГАЦИЯ -->
   <nav>
-    <a href="{{ url_for('catalog') }}">Каталог</a>
-    <a href="{{ url_for('my_list') }}">Мой список</a>
-    <a href="{{ url_for('stats') }}">Статистика</a>
-    <a href="{{ url_for('profile') }}" class="active">Профиль</a>
+    <a href="{{ url_for('catalog') }}"  class="{{ 'active' if request.endpoint=='catalog' else '' }}">Каталог</a>
+    <a href="{{ url_for('my_list') }}"  class="{{ 'active' if request.endpoint=='my_list' else '' }}">Мой список</a>
+    <a href="{{ url_for('stats') }}"    class="{{ 'active' if request.endpoint=='stats' else '' }}">Статистика</a>
+    <a href="{{ url_for('profile') }}"  class="{{ 'active' if request.endpoint in ['profile','edit_profile'] else '' }}">Профиль</a>
   </nav>
 </header>
 </header>
