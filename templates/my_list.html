@@ -1,10 +1,83 @@
-<!DOCTYPE html>
-<html lang="en">
+{% set title = "Мой список" %}
+<!doctype html>
+<html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <title>Title</title>
+  <meta charset="utf-8">
+  <title>{{ title }} — Rewatch</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}">
 </head>
 <body>
+  <header>
+    <a href="{{ url_for('index') }}" class="header-logo">Rewatch</a>
+    <nav>
+      <a href="{{ url_for('catalog') }}">Каталог</a>
+      <a href="{{ url_for('my_list') }}" class="active">Мой список</a>
+      <a href="{{ url_for('stats') }}">Статистика</a>
+      <a href="{{ url_for('profile') }}">Профиль</a>
+    </nav>
+  </header>
 
+  <main class="container">
+    <div class="toolbar">
+      <h1>{{ title }}</h1>
+
+      <!-- Контролы фильтрации/сортировки -->
+      <form method="get" action="{{ url_for('my_list') }}">
+        <input type="hidden" name="only" value="{{ only }}">
+        <div style="display:flex; gap:8px;">
+          <select name="type" onchange="this.form.submit()" class="btn">
+            <option value="all" {{ 'selected' if mtype == 'all' }}>Все</option>
+            <option value="movie" {{ 'selected' if mtype == 'movie' }}>Фильмы</option>
+            <option value="tv" {{ 'selected' if mtype == 'tv' }}>Сериалы</option>
+          </select>
+          <select name="sort" onchange="this.form.submit()" class="btn">
+            <option value="-rating" {{ 'selected' if sort == '-rating' }}>По оценке (сначала высокие)</option>
+            <option value="rating" {{ 'selected' if sort == 'rating' }}>По оценке (сначала низкие)</option>
+            <option value="added" {{ 'selected' if sort == 'added' }}>По дате добавления</option>
+          </select>
+          <select name="only" onchange="this.form.submit()" class="btn">
+            <option value="rated" {{ 'selected' if only == 'rated' }}>Только с оценкой</option>
+            <option value="all" {{ 'selected' if only == 'all' }}>Показать всё</option>
+          </select>
+        </div>
+      </form>
+    </div>
+
+    {% if items %}
+      <div class="grid">
+        {% for it in items %}
+          <a class="card" href="{{ it.href }}">
+            {% if it.poster %}
+              <img class="poster" src="{{ it.poster }}" alt="{{ it.title }}">
+            {% else %}
+              <div class="poster placeholder">Нет постера</div>
+            {% endif %}
+            <div class="meta">
+              <div class="title">{{ it.title }}</div>
+              <div class="sub">
+                {{ it.year }}
+                {% if it.media_type == 'tv' %} • Сериал{% else %} • Фильм{% endif %}
+                {% if it.rating_user %} • ⭐ {{ it.rating_user }} / 10{% endif %}
+                {% if it.status %} • {{ it.status }}{% endif %}
+              </div>
+            </div>
+          </a>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state">
+        В списке пока пусто.
+        {% if only == 'rated' %}
+          <br>Поставь оценку на странице тайтла — и он появится здесь автоматически.
+        {% endif %}
+      </div>
+    {% endif %}
+  </main>
+
+  <footer>
+    <p>© 2025 Rewatch</p>
+  </footer>
 </body>
 </html>

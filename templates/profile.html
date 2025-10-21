@@ -8,15 +8,18 @@
   <title>Профиль — Rewatch</title>
 </head>
 <body>
-  <header>
-    <h1><a href="{{ url_for('index') }}" class="logo">Rewatch</a></h1>
-    <nav>
-      <a href="{{ url_for('catalog') }}">Каталог</a>
-      <a href="{{ url_for('my_list') }}">Мой список</a>
-      <a href="{{ url_for('stats') }}">Статистика</a>
-      <a href="{{ url_for('profile') }}" class="active">Профиль</a>
-    </nav>
-  </header>
+<header>
+  <!-- ЛОГОТИП / ССЫЛКА НА ГЛАВНУЮ -->
+  <a href="{{ url_for('index') }}" class="header-logo">Rewatch</a>
+
+  <!-- НАВИГАЦИЯ -->
+  <nav>
+    <a href="{{ url_for('catalog') }}">Каталог</a>
+    <a href="{{ url_for('my_list') }}">Мой список</a>
+    <a href="{{ url_for('stats') }}">Статистика</a>
+    <a href="{{ url_for('profile') }}" class="active">Профиль</a>
+  </nav>
+</header>
 
   <main class="profile-page">
     <section class="profile-header">
@@ -27,7 +30,7 @@
           <h1 class="profile__name">{{ user.username }}</h1>
           <p>Регистрация: {{ user.created_at.strftime('%Y.%m.%d') }}</p>
           <p>📺 Всего тайтлов: <strong>126</strong></p>
-          <a class="btn-primary" href="{{ url_for('edit_profile') }}">Редактировать профиль</a>
+          <a class="btn-primary profile__edit-btn" href="{{ url_for('edit_profile') }}">Редактировать профиль</a>
       </div>
     </section>
 

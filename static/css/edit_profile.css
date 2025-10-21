@@ -89,12 +89,11 @@
 .form-input[type="text"],
 .form-input[type="email"],
 .form-input[type="password"] {
-  width: 100%;
   background-color: var(--panel-2);
   color: var(--text);
   border: 1px solid var(--border);
   border-radius: 10px;
-  padding: 0.85rem 0.95rem;
+  padding: 0.85rem 0.85rem;
   outline: none;
   transition: border 0.2s, box-shadow 0.2s;
 }

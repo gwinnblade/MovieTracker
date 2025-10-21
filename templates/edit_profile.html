@@ -19,6 +19,20 @@
     }
   </style>
 </head>
+<header>
+<header>
+  <!-- ЛОГОТИП / ССЫЛКА НА ГЛАВНУЮ -->
+  <a href="{{ url_for('index') }}" class="header-logo">Rewatch</a>
+
+  <!-- НАВИГАЦИЯ -->
+  <nav>
+    <a href="{{ url_for('catalog') }}">Каталог</a>
+    <a href="{{ url_for('my_list') }}">Мой список</a>
+    <a href="{{ url_for('stats') }}">Статистика</a>
+    <a href="{{ url_for('profile') }}" class="active">Профиль</a>
+  </nav>
+</header>
+</header>
 <body class="page-auth">
   <div class="auth-card">
     <div class="auth-card__header">
@@ -35,7 +49,9 @@
         {% endif %}
       {% endwith %}
 
-      <form class="auth-form" method="post" action="{{ url_for('edit_profile') }}" autocomplete="on">
+      <!-- ВАЖНО: добавили enctype для загрузки файлов -->
+      <form class="auth-form" method="post" action="{{ url_for('edit_profile') }}"
+            autocomplete="on" enctype="multipart/form-data">
         {# Если используешь CSRF (Flask-WTF), раскомментируй: {{ form.csrf_token }} или {{ csrf_token() }} #}
 
         <div class="form-row">
@@ -57,7 +73,7 @@
           <small class="form-help">Если поле пустое — пароль останется прежним.</small>
         </div>
 
-        <!-- НОВОЕ: URL аватарки + превью -->
+        <!-- URL аватарки + превью (оставляем, чтобы можно было ставить внешнюю ссылку) -->
         <div class="form-row">
           <label class="form-label" for="avatar_url">Ссылка на аватар</label>
           <input class="form-input" id="avatar_url" name="avatar_url"
@@ -70,6 +86,14 @@
             <small class="form-help">Текущее изображение профиля</small>
           </div>
         </div>
+
+        <!-- НОВОЕ: загрузка файла аватара -->
+        <div class="form-row">
+          <label class="form-label" for="avatar_file">Загрузить аватар (файл)</label>
+          <input class="form-input" id="avatar_file" name="avatar_file" type="file"
+                 accept=".png,.jpg,.jpeg,.gif,.webp">
+          <small class="form-help">До 2 МБ. Поддержка: PNG, JPG, JPEG, GIF, WEBP.</small>
+        </div>
         <!-- /НОВОЕ -->
 
         <div class="form-actions">
@@ -81,22 +105,35 @@
   </div>
 
   <script>
-    // Живое превью аватара при изменении URL
+    // Превью: поддержка и URL, и локального файла
     (function () {
-      const input = document.getElementById('avatar_url');
+      const urlInput = document.getElementById('avatar_url');
+      const fileInput = document.getElementById('avatar_file');
       const img = document.getElementById('avatarPreviewImg');
-      if (!input || !img) return;
+      if (!img) return;
 
       const fallback = '{{ user.avatar_url or "https://i.pravatar.cc/150" }}';
 
-      const update = () => {
-        const url = (input.value || '').trim();
+      function updateFromUrl() {
+        if (!urlInput) return;
+        const url = (urlInput.value || '').trim();
+        // Если файл выбран, приоритет у файла — не трогаем превью
+        if (fileInput && fileInput.files && fileInput.files.length) return;
         img.src = url || fallback;
-      };
+      }
 
-      input.addEventListener('input', update);
-      // подстраховка на blur — если ввод стёрт, вернуть плейсхолдер
-      input.addEventListener('blur', update);
+      function updateFromFile() {
+        const f = fileInput?.files?.[0];
+        if (f) {
+          img.src = URL.createObjectURL(f);
+        } else {
+          updateFromUrl();
+        }
+      }
+
+      urlInput && urlInput.addEventListener('input', updateFromUrl);
+      urlInput && urlInput.addEventListener('blur', updateFromUrl);
+      fileInput && fileInput.addEventListener('change', updateFromFile);
     })();
   </script>
 </body>

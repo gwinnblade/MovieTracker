@@ -2,11 +2,14 @@
 from flask import Flask, render_template, redirect, url_for, request, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
-from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import datetime
 from flask_caching import Cache
-from tmdb import trending, details, search, img_url
+from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
+from werkzeug.exceptions import RequestEntityTooLarge
 from sqlalchemy import UniqueConstraint
+import uuid
+from datetime import datetime
+from tmdb import trending, details, search, img_url
 import os
 from datetime import datetime
 
@@ -31,6 +34,26 @@ cache = Cache(app, config={"CACHE_TYPE": "SimpleCache", "CACHE_DEFAULT_TIMEOUT":
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///movietracker.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'diealready')  # в проде ОБЯЗАТЕЛЬНО переопред.
+
+# === Uploads ===
+app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'static', 'uploads')
+app.config['MAX_CONTENT_LENGTH'] = 8 * 1024 * 1024  # 2 МБ — лимит на файл
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+
+# Убедимся, что папка есть
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+def allowed_file(filename: str) -> bool:
+    if not filename:
+        return False
+    ext = filename.rsplit('.', 1)[-1].lower()
+    return ext in ALLOWED_EXTENSIONS
+
+def unique_filename(filename: str) -> str:
+    # сохраняем безопасное имя + добавляем UUID
+    base = secure_filename(filename)
+    ext = (base.rsplit('.', 1)[-1].lower() if '.' in base else 'jpg')
+    return f"{uuid.uuid4().hex}.{ext}"
 
 db = SQLAlchemy(app)
 
@@ -67,6 +90,9 @@ class UserMedia(db.Model):
     note = db.Column(db.Text)
     status = db.Column(db.String(20))  # planned/watching/completed/dropped
 
+    seasons_watched  = db.Column(db.Integer)  # для TV
+    episodes_watched = db.Column(db.Integer)  # для TV
+
     __table_args__ = (
         UniqueConstraint('user_id', 'media_type', 'tmdb_id', name='uq_user_media_unique'),
     )
@@ -81,6 +107,11 @@ login_manager.login_message = "Войдите, чтобы продолжить."
 def format_dt(value):
     return value.strftime("%d.%m.%Y") if value else ""
 
+@app.errorhandler(RequestEntityTooLarge)
+def too_large(e):
+    flash("Файл слишком большой. Максимум 2 МБ.", "error")
+    return redirect(url_for("edit_profile"))
+
 @app.route("/profile", methods=["GET"])
 @login_required
 def profile():
@@ -93,14 +124,12 @@ def edit_profile():
         username = (request.form.get("username") or "").strip()
         email = (request.form.get("email") or "").strip()
         password = (request.form.get("password") or "").strip()
-        avatar = request.form.get("avatar_url") or ""
 
-        # Проверка логина
+        # 1) базовая валидация
         if not username:
             flash("Имя пользователя не может быть пустым.", "error")
             return redirect(url_for("edit_profile"))
 
-        # Дубликаты
         existing = User.query.filter(User.username == username, User.id != current_user.id).first()
         if existing:
             flash("Такое имя уже занято.", "error")
@@ -112,12 +141,34 @@ def edit_profile():
                 flash("Этот email уже используется.", "error")
                 return redirect(url_for("edit_profile"))
 
-        # Обновляем поля
+        # 2) применяем изменения
         current_user.username = username
-        current_user.email = email if email else None
-        current_user.avatar_url = avatar if avatar else current_user.avatar_url
+        current_user.email = email or None
         if password:
             current_user.set_password(password)
+
+        # 3) ЗАГРУЗКА ФАЙЛА
+        file = request.files.get("avatar_file")
+        if file and file.filename:
+            if not allowed_file(file.filename):
+                flash("Недопустимый формат. Разрешены: png, jpg, jpeg, gif, webp.", "error")
+                return redirect(url_for("edit_profile"))
+
+            fname = unique_filename(file.filename)
+            save_path = os.path.join(app.config['UPLOAD_FOLDER'], fname)
+            file.save(save_path)
+
+            # Опционально: удалить старый файл если он лежит в наших uploads
+            old = (current_user.avatar_url or "")
+            if old.startswith("/static/uploads/"):
+                try:
+                    old_path = os.path.join(app.root_path, old.lstrip('/'))
+                    if os.path.exists(old_path):
+                        os.remove(old_path)
+                except Exception:
+                    pass  # молча, чтобы не ронять UX
+
+            current_user.avatar_url = f"/static/uploads/{fname}"
 
         db.session.commit()
         flash("Профиль успешно обновлён!", "success")
@@ -357,12 +408,128 @@ def title_page(media_type, tmdb_id):
 @app.route("/my_list")
 @login_required
 def my_list():
-    return render_template('my_list.html')
+    # Параметры (можно нажимать в UI): only=rated|all, sort=rating|-rating|added
+    only = (request.args.get("only") or "rated").lower()
+    sort = (request.args.get("sort") or "-rating").lower()
+    mtype = (request.args.get("type") or "all").lower()  # all|movie|tv
+
+    q = UserMedia.query.filter_by(user_id=current_user.id)
+
+    # Фильтр по типу
+    if mtype in {"movie", "tv"}:
+        q = q.filter(UserMedia.media_type == mtype)
+
+    # Только элементы с оценкой (по умолчанию)
+    if only == "rated":
+        q = q.filter(UserMedia.rating.isnot(None))
+
+    # Сортировка
+    if sort == "rating":
+        q = q.order_by(UserMedia.rating.asc().nullslast())
+    elif sort == "-rating":
+        q = q.order_by(UserMedia.rating.desc().nullslast())
+    else:  # added (по id как по дате добавления)
+        q = q.order_by(UserMedia.id.desc())
+
+    rows = q.all()
+
+    # Собираем карточки для шаблона
+    items = []
+    for um in rows:
+        try:
+            info = details(um.media_type, um.tmdb_id)  # TMDB карточка
+            items.append({
+                "media_type": um.media_type,
+                "tmdb_id": um.tmdb_id,
+                "title": info.get("title") or info.get("name") or "Без названия",
+                "year": (info.get("release_date") or info.get("first_air_date") or "")[:4],
+                "poster": img_url(info.get("poster_path"), "w342"),
+                "overview": info.get("overview"),
+                "rating_user": um.rating,
+                "status": um.status,
+                "progress": um.progress,
+                "href": url_for("title_page", media_type=um.media_type, tmdb_id=um.tmdb_id),
+            })
+        except Exception:
+            # Если TMDB упал/отдал мусор — пропускаем элемент, но не валимся
+            continue
+
+    return render_template(
+        "my_list.html",
+        items=items,
+        only=only,
+        sort=sort,
+        mtype=mtype
+    )
+
 
 @app.route("/stats")
 @login_required
 def stats():
-    return render_template('stats.html')
+    from sqlalchemy import func
+
+    # Берём все юзерские записи
+    q = UserMedia.query.filter_by(user_id=current_user.id)
+
+    items_all = q.all()
+    total = len(items_all)
+
+    # Подсчёт по типам
+    by_type = {"movie": 0, "tv": 0}
+    for um in items_all:
+        if um.media_type in by_type:
+            by_type[um.media_type] += 1
+
+    # Только с оценкой
+    rated = [um for um in items_all if um.rating is not None]
+    rated_count = len(rated)
+    avg_rating = round(sum(um.rating for um in rated) / rated_count, 2) if rated_count else None
+
+    # Распределение по статусам
+    statuses = ["planned", "watching", "completed", "dropped"]
+    status_counts = {s: 0 for s in statuses}
+    for um in items_all:
+        if um.status in status_counts:
+            status_counts[um.status] += 1
+
+    # Последние добавленные (по id как surrogate даты добавления)
+    recent = sorted(items_all, key=lambda x: x.id, reverse=True)[:8]
+
+    # Топ по оценке
+    top_rated = sorted([um for um in items_all if um.rating is not None],
+                       key=lambda x: (x.rating, x.id), reverse=True)[:8]
+
+    # Собираем карточки для recent и top
+    def hydrate(rows):
+        out = []
+        for um in rows:
+            try:
+                info = details(um.media_type, um.tmdb_id)
+                out.append({
+                    "media_type": um.media_type,
+                    "tmdb_id": um.tmdb_id,
+                    "title": info.get("title") or info.get("name") or "Без названия",
+                    "year": (info.get("release_date") or info.get("first_air_date") or "")[:4],
+                    "poster": img_url(info.get("poster_path"), "w342"),
+                    "overview": info.get("overview"),
+                    "rating_user": um.rating,
+                    "href": url_for("title_page", media_type=um.media_type, tmdb_id=um.tmdb_id),
+                })
+            except Exception:
+                continue
+        return out
+
+    ctx = {
+        "total": total,
+        "by_type": by_type,
+        "rated_count": rated_count,
+        "avg_rating": avg_rating,
+        "status_counts": status_counts,
+        "recent_items": hydrate(recent),
+        "top_items": hydrate(top_rated),
+    }
+    return render_template("stats.html", **ctx)
+
 
 
 
