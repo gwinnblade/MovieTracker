@@ -115,7 +115,52 @@ def too_large(e):
 @app.route("/profile", methods=["GET"])
 @login_required
 def profile():
-    return render_template("profile.html", user=current_user)
+    # Все записи пользователя
+    base_q = UserMedia.query.filter_by(user_id=current_user.id)
+
+    # Подсчёты
+    movies_completed = base_q.filter(
+        UserMedia.media_type == "movie",
+        UserMedia.status == "completed"
+    ).count()
+
+    tv_completed = base_q.filter(
+        UserMedia.media_type == "tv",
+        UserMedia.status == "completed"
+    ).count()
+
+    total_titles = base_q.count()
+
+    # Последние 3 завершённых (по id как суррогат «даты добавления/обновления»)
+    recent = base_q.filter(UserMedia.status == "completed") \
+                   .order_by(UserMedia.id.desc()) \
+                   .limit(3).all()
+
+    # Гидратация карточек
+    recent_items = []
+    for um in recent:
+        try:
+            info = details(um.media_type, um.tmdb_id)
+            recent_items.append({
+                "title": info.get("title") or info.get("name") or "Без названия",
+                "year": (info.get("release_date") or info.get("first_air_date") or "")[:4],
+                "poster": img_url(info.get("poster_path"), "w200"),
+                "href": url_for("title_page", media_type=um.media_type, tmdb_id=um.tmdb_id),
+                "rating_user": um.rating,
+                "note": um.note,
+            })
+        except Exception:
+            # Если TMDB вернул ошибку — пропустим элемент
+            continue
+
+    return render_template(
+        "profile.html",
+        user=current_user,
+        total_titles=total_titles,
+        movies_completed=movies_completed,
+        tv_completed=tv_completed,
+        recent_items=recent_items
+    )
 
 @app.route("/profile/edit", methods=["GET", "POST"])
 @login_required

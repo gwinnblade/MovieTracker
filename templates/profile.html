@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
   <title>Профиль — Rewatch</title>
 </head>
@@ -21,65 +21,76 @@
   </nav>
 </header>
 
-  <main class="profile-page">
-    <section class="profile-header">
-      <div class="avatar">
-        <img src="{{ user.avatar_url }}" alt="Аватар пользователя" />
-      </div>
-      <div class="profile-info">
-          <h1 class="profile__name">{{ user.username }}</h1>
-          <p>Регистрация: {{ user.created_at.strftime('%Y.%m.%d') }}</p>
-          <p>📺 Всего тайтлов: <strong>126</strong></p>
-          <a class="btn-primary profile__edit-btn" href="{{ url_for('edit_profile') }}">Редактировать профиль</a>
-      </div>
-    </section>
+<main class="profile-page">
+  <section class="profile-header">
+    <div class="avatar">
+      <img src="{{ user.avatar_url or 'https://i.pravatar.cc/150' }}" alt="Аватар пользователя" />
+    </div>
+    <div class="profile-info">
+      <h1 class="profile__name">{{ user.username }}</h1>
+      <p>Регистрация: {{ user.created_at.strftime('%Y.%m.%d') }}</p>
+      <p>📺 Всего тайтлов: <strong>{{ total_titles or 0 }}</strong></p>
+      <a class="btn-primary profile__edit-btn" href="{{ url_for('edit_profile') }}">Редактировать профиль</a>
+    </div>
+  </section>
 
-    <section class="profile-stats">
-      <h3>Моя активность</h3>
-      <div class="stats-grid">
-        <div class="stat-card">
-          <h4>Фильмы</h4>
-          <p><strong>54</strong> просмотрено</p>
-        </div>
-        <div class="stat-card">
-          <h4>Сериалы</h4>
-          <p><strong>38</strong> просмотрено</p>
-        </div>
-        <div class="stat-card">
-          <h4>Аниме</h4>
-          <p><strong>34</strong> просмотрено</p>
-        </div>
+  <section class="profile-stats">
+    <h3>Моя активность</h3>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <h4>Фильмы</h4>
+        <p><strong>{{ movies_completed or 0 }}</strong> просмотрено</p>
       </div>
-    </section>
+      <div class="stat-card">
+        <h4>Сериалы</h4>
+        <p><strong>{{ tv_completed or 0 }}</strong> просмотрено</p>
+      </div>
+    </div>
+  </section>
 
-    <section class="recent-activity">
-      <h3>Недавние просмотры</h3>
+  <section class="recent-activity">
+    <h3>Недавние просмотры</h3>
+
+    {% if recent_items %}
+      <div class="activity-list">
+        {% for it in recent_items %}
+          <div class="activity-item">
+            {% if it.poster %}
+              <img src="{{ it.poster }}" alt="{{ it.title }}">
+            {% endif %}
+            <div>
+              <h4><a href="{{ it.href }}" style="color:inherit; text-decoration:none;">{{ it.title }}</a></h4>
+              <p>
+                {% if it.rating_user %}⭐ {{ it.rating_user }} / 10{% else %}Без оценки{% endif %}
+                {% if it.year %} | {{ it.year }}{% endif %}
+              </p>
+              {% if it.note %}
+                <p style="margin-top:.35rem; color:#a9a9a9;">Заметка: {{ it.note }}</p>
+              {% endif %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
       <div class="activity-list">
         <div class="activity-item">
-          <img src="https://image.tmdb.org/t/p/w200/39wmItIWsg5sZMyRUHLkWBcuVCM.jpg" alt="Spirited Away">
           <div>
-            <h4>Spirited Away</h4>
-            <p>⭐ 9 / 10 | 3 дня назад</p>
-          </div>
-        </div>
-        <div class="activity-item">
-          <img src="https://image.tmdb.org/t/p/w200/q719jXXEzOoYaps6babgKnONONX.jpg" alt="Your Name">
-          <div>
-            <h4>Your Name</h4>
-            <p>⭐ 8 / 10 | неделю назад</p>
+            <h4>Пока пусто</h4>
+            <p style="color:#a9a9a9;">Поставьте статус «Завершено» на странице тайтла — последние три появятся здесь.</p>
           </div>
         </div>
       </div>
-    </section>
+    {% endif %}
+  </section>
 
-    <section class="profile-actions">
-      <button class="btn-primary">Добавить тайтл</button>
-      <button class="btn-outline">Экспортировать список</button>
-    </section>
-  </main>
+  <section class="profile-actions">
+    <a class="btn-primary" href="{{ url_for('catalog') }}">Добавить тайтл</a>
+    <a class="btn-outline" href="{{ url_for('my_list') }}">Экспортировать список</a>
+  </section>
+</main>
 
-  <footer>
-    <p>© 2025 Rewatch | vxksgxny</p>
-  </footer>
+<footer>
+  <p>© 2025 Rewatch</p>
+</footer>
 </body>
 </html>

@@ -70,7 +70,7 @@
       <div class="stats-card">
         <h4>Всего в библиотеке</h4>
         <div class="stat-num">{{ total }}</div>
-        <div class="muted">Количество тайтлов в UserMedia</div>
+        <div class="muted">Количество тайтлов</div>
       </div>
       <div class="stats-card">
         <h4>С оценкой</h4>
@@ -108,21 +108,20 @@
         <div class="stats-card">
           {% set sc = status_counts %}
           {% set s_total = sc.planned + sc.watching + sc.completed + sc.dropped %}
-          <div class="row"><span class="label">Planned</span><span class="value">{{ sc.planned }}</span></div>
+          <div class="row"><span class="label">В планах</span><span class="value">{{ sc.planned }}</span></div>
           <div class="bar"><div class="bar-fill" style="width: {{ (sc.planned / s_total * 100) if s_total else 0 }}%"></div></div>
 
-          <div class="row" style="margin-top:8px;"><span class="label">Watching</span><span class="value">{{ sc.watching }}</span></div>
+          <div class="row" style="margin-top:8px;"><span class="label">Смотрю</span><span class="value">{{ sc.watching }}</span></div>
           <div class="bar"><div class="bar-fill" style="width: {{ (sc.watching / s_total * 100) if s_total else 0 }}%"></div></div>
         </div>
         <div class="stats-card">
-          <div class="row"><span class="label">Completed</span><span class="value">{{ sc.completed }}</span></div>
+          <div class="row"><span class="label">Завершено</span><span class="value">{{ sc.completed }}</span></div>
           <div class="bar"><div class="bar-fill" style="width: {{ (sc.completed / s_total * 100) if s_total else 0 }}%"></div></div>
 
-          <div class="row" style="margin-top:8px;"><span class="label">Dropped</span><span class="value">{{ sc.dropped }}</span></div>
+          <div class="row" style="margin-top:8px;"><span class="label">Дропнуто</span><span class="value">{{ sc.dropped }}</span></div>
           <div class="bar"><div class="bar-fill" style="width: {{ (sc.dropped / s_total * 100) if s_total else 0 }}%"></div></div>
         </div>
       </div>
-      <div class="muted">Статусы берутся из UserMedia.status: planned / watching / completed / dropped.</div>
     </div>
 
     <!-- Недавнее -->
