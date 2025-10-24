@@ -4,8 +4,24 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Каталог — MovieTracker</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}">
+
+  <!-- Локальное переопределение: ровно 6 колонок на каталоге (3 строки × 6 = 18 карточек) -->
+  <style>
+    .catalog-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: var(--gap);
+      justify-items: center;
+    }
+    /* На узких экранах вернём адаптивность */
+    @media (max-width: 1024px) {
+      .catalog-grid {
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      }
+    }
+  </style>
 </head>
 <header>
   <!-- ЛОГОТИП / ССЫЛКА НА ГЛАВНУЮ -->
@@ -36,8 +52,9 @@
     </div>
 
     {% if items and items|length %}
-      <div class="grid">
-        {% for it in items %}
+      <!-- добавил класс catalog-grid и ограничение до 18 элементов -->
+      <div class="grid catalog-grid">
+        {% for it in items[:18] %}
           <a class="card" href="{{ url_for('title_page', media_type=it.media_type, tmdb_id=it.tmdb_id) }}">
             {% if it.poster %}
               <img class="poster" src="{{ it.poster }}" alt="{{ it.title }}">

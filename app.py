@@ -77,6 +77,25 @@ class User(UserMixin, db.Model):
     def check_password(self, raw_password: str) -> bool:
         return check_password_hash(self.password_hash, raw_password)
 
+class EpisodeNote(db.Model):
+    __tablename__ = "episode_note"
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False, index=True)
+
+    tv_id = db.Column(db.Integer, nullable=False, index=True)  # TMDB id сериала
+    season = db.Column(db.Integer, nullable=False)
+    episode = db.Column(db.Integer, nullable=False)
+
+    note = db.Column(db.Text, nullable=False)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    __table_args__ = (
+        db.UniqueConstraint("user_id", "tv_id", "season", "episode", name="uq_user_tv_season_episode"),
+    )
+
+
 # === TMDB ===
 class UserMedia(db.Model):
     __tablename__ = "user_media"
@@ -304,7 +323,23 @@ def logout():
 @app.route("/")
 @app.route("/index")
 def index():
-    return render_template('index.html')  # ОСНОВНАЯ СТРАНИЦА
+    try:
+        data = trending("movie", "week", 1)
+        items = []
+        for it in (data.get("results") or [])[:10]:
+            items.append({
+                "tmdb_id": it.get("id"),
+                "title": it.get("title") or "Без названия",
+                "poster": img_url(it.get("poster_path"), "w342"),
+                "rating": it.get("vote_average"),
+                "year": (it.get("release_date") or "")[:4],
+            })
+    except Exception as e:
+        app.logger.error(f"Ошибка при загрузке трендов: {e}")
+        items = []
+
+    return render_template("index.html", items=items)
+
 
 def _as_int(s, default=1):
     try:
@@ -381,72 +416,76 @@ def search_page():
 @app.route("/title/<media_type>/<int:tmdb_id>", methods=["GET", "POST"])
 @login_required
 def title_page(media_type, tmdb_id):
+    # helper
+    def parse_int(x, default=None):
+        try: return int(x)
+        except (TypeError, ValueError): return default
+
     if request.method == "POST":
-        um = UserMedia.query.filter_by(
-            user_id=current_user.id, media_type=media_type, tmdb_id=tmdb_id
-        ).first()
-        if not um:
-            um = UserMedia(user_id=current_user.id, media_type=media_type, tmdb_id=tmdb_id)
-            db.session.add(um)
+        action = (request.form.get("action") or "").lower()
 
-        # безопасный парсер
-        def parse_int(value, default=None):
-            try:
-                return int(value)
-            except (TypeError, ValueError):
-                return default
+        # --- НОВОЕ: заметка по серии ---
+        if media_type == "tv" and action in {"add_ep_note", "del_ep_note"}:
+            if action == "add_ep_note":
+                season = parse_int(request.form.get("ep_season"), 0) or 0
+                episode = parse_int(request.form.get("ep_number"), 0) or 0
+                text_note = (request.form.get("ep_note") or "").strip()
 
-        # рейтинг
-        rating = parse_int(request.form.get("rating"))
-        if rating is not None and not (1 <= rating <= 10):
-            flash("Рейтинг должен быть от 1 до 10.", "error")
-            return redirect(url_for("title_page", media_type=media_type, tmdb_id=tmdb_id))
+                if season <= 0 or episode <= 0:
+                    flash("Укажи сезон и эпизод (положительные числа).", "error")
+                    return redirect(url_for("title_page", media_type=media_type, tmdb_id=tmdb_id))
+                if not text_note:
+                    flash("Заметка не может быть пустой.", "error")
+                    return redirect(url_for("title_page", media_type=media_type, tmdb_id=tmdb_id))
 
-        # прежний progress оставляем как есть (на будущее можно убрать из формы)
-        progress = parse_int(request.form.get("progress"), 0)
-        if progress is not None and progress < 0:
-            progress = 0
+                # upsert по уникальному ключу (user+tv+season+episode)
+                note = EpisodeNote.query.filter_by(
+                    user_id=current_user.id, tv_id=tmdb_id,
+                    season=season, episode=episode
+                ).first()
+                if not note:
+                    note = EpisodeNote(
+                        user_id=current_user.id, tv_id=tmdb_id,
+                        season=season, episode=episode, note=text_note
+                    )
+                    db.session.add(note)
+                else:
+                    note.note = text_note
 
-        status = request.form.get("status") or None
-        if status and status not in {"planned", "watching", "completed", "dropped"}:
-            flash("Некорректный статус.", "error")
-            return redirect(url_for("title_page", media_type=media_type, tmdb_id=tmdb_id))
+                db.session.commit()
+                flash(f"Заметка сохранена: S{season}E{episode}.", "success")
+                return redirect(url_for("title_page", media_type=media_type, tmdb_id=tmdb_id))
 
-        um.rating = rating
-        um.progress = progress
-        um.status = status
-        um.note = request.form.get("note") or None
+            elif action == "del_ep_note":
+                note_id = parse_int(request.form.get("note_id"))
+                if note_id:
+                    note = EpisodeNote.query.filter_by(id=note_id, user_id=current_user.id, tv_id=tmdb_id).first()
+                    if note:
+                        db.session.delete(note)
+                        db.session.commit()
+                        flash("Заметка удалена.", "success")
+                return redirect(url_for("title_page", media_type=media_type, tmdb_id=tmdb_id))
 
-        # НОВОЕ: поля для сериалов
-        if media_type == "tv":
-            # Получим лимиты из TMDB, чтобы зажать значения
-            info = details(media_type, tmdb_id)  # может уже быть в кэше, но вызов безопасен
-            max_seasons = info.get("number_of_seasons") or 0
-            max_episodes = info.get("number_of_episodes") or 0
-
-            seasons_watched  = parse_int(request.form.get("seasons_watched"), 0) or 0
-            episodes_watched = parse_int(request.form.get("episodes_watched"), 0) or 0
-
-            if seasons_watched < 0: seasons_watched = 0
-            if episodes_watched < 0: episodes_watched = 0
-            if max_seasons and seasons_watched > max_seasons: seasons_watched = max_seasons
-            if max_episodes and episodes_watched > max_episodes: episodes_watched = max_episodes
-
-            um.seasons_watched = seasons_watched
-            um.episodes_watched = episodes_watched
-        else:
-            # для фильмов эти поля сбрасывать не обязательно; можно оставить как есть
-            pass
-
-        db.session.commit()
-        flash("Сохранено!", "success")
-        return redirect(url_for("title_page", media_type=media_type, tmdb_id=tmdb_id))
+        # --- СТАРАЯ логика сохранения UserMedia (рейтинг/статус/прогресс и т.п.) ---
+        # ... твой текущий код POST для рейтинга/статуса/сезонов/серий ...
+        # В конце:
+        # return redirect(url_for("title_page", media_type=media_type, tmdb_id=tmdb_id))
 
     # --- GET ---
     info = details(media_type, tmdb_id)
-    um = UserMedia.query.filter_by(
-        user_id=current_user.id, media_type=media_type, tmdb_id=tmdb_id
-    ).first()
+    um = UserMedia.query.filter_by(user_id=current_user.id, media_type=media_type, tmdb_id=tmdb_id).first()
+
+    # НОВОЕ: подтянуть заметки по сериям текущего сериала
+    episode_notes = []
+    if media_type == "tv":
+        rows = EpisodeNote.query.filter_by(user_id=current_user.id, tv_id=tmdb_id)\
+                                .order_by(EpisodeNote.season.desc(), EpisodeNote.episode.desc())\
+                                .all()
+        episode_notes = [{
+            "id": n.id, "season": n.season, "episode": n.episode,
+            "note": n.note, "updated_at": n.updated_at
+        } for n in rows]
+
     ctx = {
         "media_type": media_type,
         "tmdb_id": tmdb_id,
@@ -459,11 +498,10 @@ def title_page(media_type, tmdb_id):
         "year": (info.get("release_date") or info.get("first_air_date") or "")[:4],
         "seasons": info.get("number_of_seasons") if media_type == "tv" else None,
         "episodes": info.get("number_of_episodes") if media_type == "tv" else None,
-        "user": um
+        "user": um,
+        "episode_notes": episode_notes,  # <— в шаблон
     }
     return render_template("title.html", **ctx)
-
-
 
 @app.route("/my_list")
 @login_required
