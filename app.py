@@ -1,12 +1,12 @@
 # app.py
-from flask import Flask, render_template, redirect, url_for, request, flash
+from flask import Flask, render_template, redirect, url_for, request, flash, abort
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_caching import Cache
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from werkzeug.exceptions import RequestEntityTooLarge
-from sqlalchemy import UniqueConstraint
+from sqlalchemy import UniqueConstraint, func
 import uuid
 from datetime import datetime
 from tmdb import trending, details, search, img_url
@@ -93,6 +93,37 @@ class EpisodeNote(db.Model):
 
     __table_args__ = (
         db.UniqueConstraint("user_id", "tv_id", "season", "episode", name="uq_user_tv_season_episode"),
+    )
+
+
+# === Коллекции пользователя ===
+class Collection(db.Model):
+    __tablename__ = "collection"
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False, index=True)
+    title = db.Column(db.String(150), nullable=False)
+    description = db.Column(db.Text)
+    is_public = db.Column(db.Boolean, default=False, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    user = db.relationship("User", backref=db.backref("collections", lazy="dynamic"))
+
+
+class CollectionItem(db.Model):
+    __tablename__ = "collection_item"
+
+    id = db.Column(db.Integer, primary_key=True)
+    collection_id = db.Column(db.Integer, db.ForeignKey("collection.id"), nullable=False, index=True)
+    media_type = db.Column(db.String(10), nullable=False)
+    tmdb_id = db.Column(db.Integer, nullable=False)
+    added_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    collection = db.relationship("Collection", backref=db.backref("items", cascade="all, delete-orphan", lazy="dynamic"))
+
+    __table_args__ = (
+        UniqueConstraint("collection_id", "media_type", "tmdb_id", name="uq_collection_item_unique"),
     )
 
 
@@ -558,6 +589,206 @@ def my_list():
         only=only,
         sort=sort,
         mtype=mtype
+    )
+
+
+@app.route("/collections", methods=["GET"])
+def collections_overview():
+    my_collections = []
+    public_collections = []
+
+    if current_user.is_authenticated:
+        rows = (
+            Collection.query
+            .filter(Collection.user_id == current_user.id)
+            .outerjoin(CollectionItem)
+            .add_columns(func.count(CollectionItem.id))
+            .group_by(Collection.id)
+            .order_by(Collection.updated_at.desc(), Collection.id.desc())
+            .all()
+        )
+        for col, count in rows:
+            my_collections.append({
+                "id": col.id,
+                "title": col.title,
+                "description": col.description,
+                "is_public": col.is_public,
+                "updated_at": col.updated_at,
+                "count": count,
+            })
+
+        public_rows = (
+            Collection.query
+            .filter(Collection.is_public.is_(True))
+            .filter(Collection.user_id != current_user.id)
+            .outerjoin(CollectionItem)
+            .add_columns(func.count(CollectionItem.id))
+            .group_by(Collection.id)
+            .order_by(Collection.updated_at.desc(), Collection.id.desc())
+            .limit(24)
+            .all()
+        )
+    else:
+        public_rows = (
+            Collection.query
+            .filter(Collection.is_public.is_(True))
+            .outerjoin(CollectionItem)
+            .add_columns(func.count(CollectionItem.id))
+            .group_by(Collection.id)
+            .order_by(Collection.updated_at.desc(), Collection.id.desc())
+            .limit(24)
+            .all()
+        )
+
+    for col, count in public_rows:
+        public_collections.append({
+            "id": col.id,
+            "title": col.title,
+            "description": col.description,
+            "is_public": col.is_public,
+            "updated_at": col.updated_at,
+            "count": count,
+            "owner": col.user.username if col.user else "",
+        })
+
+    return render_template(
+        "collections.html",
+        my_collections=my_collections,
+        public_collections=public_collections,
+    )
+
+
+@app.route("/collections/create", methods=["POST"])
+@login_required
+def create_collection():
+    title = (request.form.get("title") or "").strip()
+    if not title:
+        flash("Введите название коллекции.", "error")
+        return redirect(url_for("collections_overview"))
+
+    collection = Collection(user_id=current_user.id, title=title)
+    db.session.add(collection)
+    db.session.commit()
+
+    flash("Коллекция создана.", "success")
+    return redirect(url_for("collection_detail", collection_id=collection.id))
+
+
+@app.route("/collections/<int:collection_id>", methods=["GET", "POST"])
+def collection_detail(collection_id):
+    collection = Collection.query.get_or_404(collection_id)
+    is_owner = current_user.is_authenticated and collection.user_id == current_user.id
+
+    if not collection.is_public and not is_owner:
+        abort(404)
+
+    if request.method == "POST":
+        if not is_owner:
+            abort(403)
+
+        action = (request.form.get("action") or "").lower()
+
+        if action == "update_meta":
+            title = (request.form.get("title") or "").strip()
+            description = (request.form.get("description") or "").strip()
+            is_public = bool(request.form.get("is_public"))
+
+            if not title:
+                flash("Название не может быть пустым.", "error")
+                return redirect(url_for("collection_detail", collection_id=collection.id))
+
+            collection.title = title
+            collection.description = description or None
+            collection.is_public = is_public
+            db.session.commit()
+            flash("Коллекция обновлена.", "success")
+            return redirect(url_for("collection_detail", collection_id=collection.id))
+
+        elif action == "add_item":
+            media_type = (request.form.get("media_type") or "").lower()
+            tmdb_id = parse_int(request.form.get("tmdb_id"))
+
+            if media_type not in {"movie", "tv"} or not tmdb_id:
+                flash("Укажите корректный тип и идентификатор.", "error")
+                return redirect(url_for("collection_detail", collection_id=collection.id))
+
+            exists = collection.items.filter_by(media_type=media_type, tmdb_id=tmdb_id).first()
+            if exists:
+                flash("Этот тайтл уже в коллекции.", "info")
+                return redirect(url_for("collection_detail", collection_id=collection.id))
+
+            item = CollectionItem(collection_id=collection.id, media_type=media_type, tmdb_id=tmdb_id)
+            db.session.add(item)
+            db.session.commit()
+            flash("Тайтл добавлен в коллекцию.", "success")
+            return redirect(url_for("collection_detail", collection_id=collection.id))
+
+        elif action == "remove_item":
+            item_id = parse_int(request.form.get("item_id"))
+            if item_id:
+                item = collection.items.filter_by(id=item_id).first()
+                if item:
+                    db.session.delete(item)
+                    db.session.commit()
+                    flash("Тайтл удалён из коллекции.", "success")
+            return redirect(url_for("collection_detail", collection_id=collection.id))
+
+    raw_items = collection.items.order_by(CollectionItem.added_at.desc()).all()
+    items = []
+    for item in raw_items:
+        try:
+            info = details(item.media_type, item.tmdb_id)
+            items.append({
+                "id": item.id,
+                "media_type": item.media_type,
+                "tmdb_id": item.tmdb_id,
+                "title": info.get("title") or info.get("name") or "Без названия",
+                "year": (info.get("release_date") or info.get("first_air_date") or "")[:4],
+                "poster": img_url(info.get("poster_path"), "w185"),
+                "href": url_for("title_page", media_type=item.media_type, tmdb_id=item.tmdb_id),
+            })
+        except Exception:
+            items.append({
+                "id": item.id,
+                "media_type": item.media_type,
+                "tmdb_id": item.tmdb_id,
+                "title": "Не удалось загрузить данные",
+                "year": "",
+                "poster": None,
+                "href": "#",
+            })
+
+    search_query = (request.args.get("q") or "").strip()
+    search_results = []
+    if is_owner and search_query:
+        try:
+            data = search(search_query, "multi", 1)
+            existing_pairs = {(it.media_type, it.tmdb_id) for it in raw_items}
+            for it in data.get("results", []) or []:
+                media_type = it.get("media_type")
+                if media_type not in {"movie", "tv"}:
+                    continue
+                tmdb_id = it.get("id")
+                if not tmdb_id:
+                    continue
+                search_results.append({
+                    "media_type": media_type,
+                    "tmdb_id": tmdb_id,
+                    "title": it.get("title") or it.get("name") or "Без названия",
+                    "year": (it.get("release_date") or it.get("first_air_date") or "")[:4],
+                    "poster": img_url(it.get("poster_path"), "w185"),
+                    "already_added": (media_type, tmdb_id) in existing_pairs,
+                })
+        except Exception:
+            flash("Не удалось выполнить поиск. Попробуйте позже.", "error")
+
+    return render_template(
+        "collection_detail.html",
+        collection=collection,
+        is_owner=is_owner,
+        items=items,
+        search_query=search_query,
+        search_results=search_results,
     )
 
 

@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <title>{{ collection.title }} — Коллекция Rewatch</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}">
+</head>
+<body>
+  <header>
+    <a href="{{ url_for('index') }}" class="header-logo">Rewatch</a>
+    <nav>
+      <a href="{{ url_for('catalog') }}" class="{{ 'active' if request.endpoint=='catalog' else '' }}">Каталог</a>
+      <a href="{{ url_for('collections_overview') }}" class="{{ 'active' if request.endpoint in ['collections_overview', 'collection_detail'] else '' }}">Коллекции</a>
+      <a href="{{ url_for('my_list') }}" class="{{ 'active' if request.endpoint=='my_list' else '' }}">Мой список</a>
+      <a href="{{ url_for('stats') }}" class="{{ 'active' if request.endpoint=='stats' else '' }}">Статистика</a>
+      <a href="{{ url_for('profile') }}" class="{{ 'active' if request.endpoint in ['profile','edit_profile'] else '' }}">Профиль</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <a class="back-link" href="{{ url_for('collections_overview') }}">&larr; Назад к коллекциям</a>
+
+    {% with msgs = get_flashed_messages(with_categories=true) %}
+      {% if msgs %}
+        <div class="flash-list">
+          {% for cat, m in msgs %}
+            <div class="flash {{ cat }}">{{ m }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <section class="section">
+      <div class="section-header">
+        <h1>{{ collection.title }}</h1>
+        <span class="badge {{ 'badge-success' if collection.is_public else 'badge-muted' }}">{{ 'Публичная' if collection.is_public else 'Личная' }}</span>
+      </div>
+      <p class="section-subtitle">{{ collection.description or 'Описание пока не добавлено.' }}</p>
+      <p class="section-meta">Автор: {{ collection.user.username if collection.user else 'Аноним' }} • Обновлено {{ collection.updated_at|dt }}</p>
+    </section>
+
+    {% if is_owner %}
+      <section class="section">
+        <div class="section-header">
+          <h2>Настройки коллекции</h2>
+        </div>
+        <form class="stack" method="post">
+          <input type="hidden" name="action" value="update_meta">
+          <label>
+            <span class="form-label">Название</span>
+            <input type="text" name="title" value="{{ collection.title }}" required>
+          </label>
+          <label>
+            <span class="form-label">Описание</span>
+            <textarea name="description" rows="3" placeholder="Расскажите, что объединяет фильмы в подборке">{{ collection.description or '' }}</textarea>
+          </label>
+          <label class="checkbox">
+            <input type="checkbox" name="is_public" {% if collection.is_public %}checked{% endif %}>
+            Сделать коллекцию публичной
+          </label>
+          <button class="btn" type="submit">Сохранить изменения</button>
+        </form>
+      </section>
+    {% endif %}
+
+    <section class="section">
+      <div class="section-header">
+        <h2>Содержимое</h2>
+        <span class="section-meta">{{ items|length }} элементов</span>
+      </div>
+
+      {% if items %}
+        <div class="grid">
+          {% for it in items %}
+            <div class="card collection-item">
+              {% if it.poster %}
+                <img src="{{ it.poster }}" alt="{{ it.title }}" class="poster-small">
+              {% else %}
+                <div class="poster-small placeholder">Нет постера</div>
+              {% endif %}
+              <div class="card-body">
+                <a class="item-title" href="{{ it.href }}">{{ it.title }}</a>
+                <div class="item-meta">{{ 'Сериал' if it.media_type == 'tv' else 'Фильм' }}{% if it.year %} • {{ it.year }}{% endif %}</div>
+                {% if is_owner %}
+                  <form method="post" class="inline-form">
+                    <input type="hidden" name="action" value="remove_item">
+                    <input type="hidden" name="item_id" value="{{ it.id }}">
+                    <button class="btn-danger" type="submit">Удалить</button>
+                  </form>
+                {% endif %}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="empty-state">
+          Коллекция пока пуста. Добавьте фильмы и сериалы, чтобы поделиться подборкой.
+        </div>
+      {% endif %}
+    </section>
+
+    {% if is_owner %}
+      <section class="section">
+        <div class="section-header">
+          <h2>Добавить фильм или сериал</h2>
+        </div>
+        <form class="search-form" method="get">
+          <input type="text" name="q" value="{{ search_query }}" placeholder="Найти по названию">
+          <button class="btn" type="submit">Поиск</button>
+        </form>
+
+        {% if search_query %}
+          <h3 class="section-subtitle">Результаты по запросу «{{ search_query }}»</h3>
+          {% if search_results %}
+            <div class="grid">
+              {% for it in search_results %}
+                <div class="card search-result">
+                  {% if it.poster %}
+                    <img src="{{ it.poster }}" alt="{{ it.title }}" class="poster-small">
+                  {% else %}
+                    <div class="poster-small placeholder">Нет постера</div>
+                  {% endif %}
+                  <div class="card-body">
+                    <div class="item-title">{{ it.title }}</div>
+                    <div class="item-meta">{{ 'Сериал' if it.media_type == 'tv' else 'Фильм' }}{% if it.year %} • {{ it.year }}{% endif %}</div>
+                    {% if it.already_added %}
+                      <div class="badge badge-muted">Уже в коллекции</div>
+                    {% else %}
+                      <form method="post" class="inline-form">
+                        <input type="hidden" name="action" value="add_item">
+                        <input type="hidden" name="media_type" value="{{ it.media_type }}">
+                        <input type="hidden" name="tmdb_id" value="{{ it.tmdb_id }}">
+                        <button class="btn" type="submit">Добавить</button>
+                      </form>
+                    {% endif %}
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="empty-state">
+              Ничего не найдено. Попробуйте изменить запрос.
+            </div>
+          {% endif %}
+        {% endif %}
+      </section>
+    {% endif %}
+  </main>
+</body>
+</html>
