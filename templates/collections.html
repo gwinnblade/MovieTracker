@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <title>Коллекции — Rewatch</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}">
+</head>
+<body>
+  <header>
+    <a href="{{ url_for('index') }}" class="header-logo">Rewatch</a>
+    <nav>
+      <a href="{{ url_for('catalog') }}" class="{{ 'active' if request.endpoint=='catalog' else '' }}">Каталог</a>
+      <a href="{{ url_for('collections_overview') }}" class="{{ 'active' if request.endpoint in ['collections_overview', 'collection_detail'] else '' }}">Коллекции</a>
+      <a href="{{ url_for('my_list') }}" class="{{ 'active' if request.endpoint=='my_list' else '' }}">Мой список</a>
+      <a href="{{ url_for('stats') }}" class="{{ 'active' if request.endpoint=='stats' else '' }}">Статистика</a>
+      <a href="{{ url_for('profile') }}" class="{{ 'active' if request.endpoint in ['profile','edit_profile'] else '' }}">Профиль</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <div class="toolbar">
+      <h1>Коллекции</h1>
+      {% if current_user.is_authenticated %}
+        <form class="form-inline" method="post" action="{{ url_for('create_collection') }}">
+          <input type="text" name="title" placeholder="Название новой коллекции" required>
+          <button class="btn" type="submit">Создать</button>
+        </form>
+      {% endif %}
+    </div>
+
+    {% with msgs = get_flashed_messages(with_categories=true) %}
+      {% if msgs %}
+        <div class="flash-list">
+          {% for cat, m in msgs %}
+            <div class="flash {{ cat }}">{{ m }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    {% if current_user.is_authenticated %}
+      <section class="section">
+        <div class="section-header">
+          <h2>Мои коллекции</h2>
+        </div>
+        {% if my_collections %}
+          <div class="grid">
+            {% for it in my_collections %}
+              <a class="card collection-card" href="{{ url_for('collection_detail', collection_id=it.id) }}">
+                <div class="card-header">
+                  <h3>{{ it.title }}</h3>
+                  <span class="badge {{ 'badge-success' if it.is_public else 'badge-muted' }}">{{ 'Публичная' if it.is_public else 'Личная' }}</span>
+                </div>
+                <p class="card-text">{{ it.description or 'Описание не добавлено.' }}</p>
+                <div class="card-footer">
+                  <span>{{ it.count }} элементов</span>
+                  {% if it.updated_at %}
+                    <span>Обновлено {{ it.updated_at|dt }}</span>
+                  {% endif %}
+                </div>
+              </a>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="empty-state">
+            Пока нет ни одной коллекции. Создайте первую, чтобы собрать любимые фильмы и сериалы.
+          </div>
+        {% endif %}
+      </section>
+    {% endif %}
+
+    <section class="section">
+      <div class="section-header">
+        <h2>Публичные подборки</h2>
+        <p class="section-subtitle">Коллекции, доступные всем пользователям Rewatch.</p>
+      </div>
+      {% if public_collections %}
+        <div class="grid">
+          {% for it in public_collections %}
+            <a class="card collection-card" href="{{ url_for('collection_detail', collection_id=it.id) }}">
+              <div class="card-header">
+                <h3>{{ it.title }}</h3>
+                <span class="badge badge-success">Публичная</span>
+              </div>
+              <p class="card-text">{{ it.description or 'Описание не добавлено.' }}</p>
+              <div class="card-footer">
+                <span>{{ it.count }} элементов</span>
+                <span>Автор: {{ it.owner or 'Аноним' }}</span>
+              </div>
+            </a>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="empty-state">
+          Публичных коллекций пока нет. Будьте первым, кто поделится своей подборкой.
+        </div>
+      {% endif %}
+    </section>
+  </main>
+</body>
+</html>
