@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <title>{{ title }} — MovieTracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/title.css') }}">
+</head>
+<body>
+<header>
+  <a href="{{ url_for('index') }}" class="header-logo">Rewatch</a>
+  <nav>
+    <a href="{{ url_for('catalog') }}"  class="{{ 'active' if request.endpoint=='catalog' else '' }}">Каталог</a>
+    <a href="{{ url_for('my_list') }}"  class="{{ 'active' if request.endpoint=='my_list' else '' }}">Мой список</a>
+    <a href="{{ url_for('stats') }}"    class="{{ 'active' if request.endpoint=='stats' else '' }}">Статистика</a>
+    <a href="{{ url_for('profile') }}"  class="{{ 'active' if request.endpoint in ['profile','edit_profile'] else '' }}">Профиль</a>
+  </nav>
+</header>
+
+<div class="title-hero" style="background-image:url('{{ backdrop }}');">
+  <div class="title-hero__inner"></div>
+</div>
+
+<div class="title-wrap">
+  <aside class="title-poster">
+    {% if poster %}<img src="{{ poster }}" alt="{{ title }}">{% endif %}
+  </aside>
+
+  <section class="title-info">
+    <h1 class="title-name">{{ title }}</h1>
+
+    <div class="title-meta">
+      <span class="title-chip">Год: {{ year or '—' }}</span>
+      <span class="title-chip">Оценка TMDb: ★ {{ '%.1f'|format(vote) if vote else '—' }}</span>
+      {% if media_type == 'tv' %}
+        <span class="title-chip">Сезоны: {{ seasons or '—' }}</span>
+        <span class="title-chip">Серии всего: {{ episodes or '—' }}</span>
+      {% endif %}
+    </div>
+
+    {% if genres %}
+      <div class="title-genres">
+        {% for g in genres %}<span class="title-genre">{{ g }}</span>{% endfor %}
+      </div>
+    {% endif %}
+
+    {% if overview %}<div class="title-overview">{{ overview }}</div>{% endif %}
+
+    {# === СЕЗОНЫ (только для TV) === #}
+    {% if media_type == 'tv' and season_options %}
+    <form class="title-user" method="get" action="{{ url_for('title_page', media_type=media_type, tmdb_id=tmdb_id) }}">
+      <div class="form-row">
+        <div class="field">
+          <label for="season_select">Сезон</label>
+          <select id="season_select" name="season">
+            {% for s in season_options|sort(attribute='num') %}
+              <option value="{{ s.num }}" {{ 'selected' if s.num == season_selected else '' }}>
+                {{ s.label }}{% if s.episode_count is not none %} — {{ s.episode_count }} серий (TMDb){% endif %}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label>Точное число серий (выбранный сезон)</label>
+          <input id="season_exact_count" type="text" value="{{ episodes_count_exact }} серий" readonly>
+        </div>
+        <div class="field" style="align-self:end;">
+          <button class="btn-primary" type="submit">Открыть сезон</button>
+        </div>
+      </div>
+    </form>
+
+    {# === ПРОГРЕСС ПО ВЫБРАННОМУ СЕЗОНУ === #}
+    <form class="title-user" method="post" style="margin-top:12px;">
+      <input type="hidden" name="action" value="save_season_progress">
+      <input type="hidden" id="season_hidden" name="season" value="{{ season_selected }}">
+      <div class="form-row">
+        <div class="field">
+          <label for="season_watched">Просмотрено серий в сезоне</label>
+          <input id="season_watched" name="season_watched" type="number" min="0"
+                 max="{{ episodes_count_exact or 0 }}"
+                 value="{{ season_progress_watched or 0 }}">
+          <small class="form-help">Максимум — {{ episodes_count_exact or '—' }}</small>
+        </div>
+        <div class="field">
+          <label for="season_status">Статус сезона</label>
+          {% set sps = (season_progress_status or (user.status if user else None)) %}
+          <select id="season_status" name="season_status">
+            <option value=""          {{ 'selected' if not sps else '' }}>—</option>
+            <option value="planned"   {{ 'selected' if sps=='planned'   else '' }}>Планирую</option>
+            <option value="watching"  {{ 'selected' if sps=='watching'  else '' }}>Смотрю</option>
+            <option value="completed" {{ 'selected' if sps=='completed' else '' }}>Завершил</option>
+            <option value="dropped"   {{ 'selected' if sps=='dropped'   else '' }}>Дропнул</option>
+          </select>
+        </div>
+        <div class="field" style="align-self:end;">
+          <button class="btn-primary" type="submit">Сохранить прогресс</button>
+        </div>
+      </div>
+    </form>
+    {% endif %}
+
+    {# === СТАТУС ТАЙТЛА (movie/tv) === #}
+    <form class="title-user" method="post" style="margin-top:12px;">
+      <input type="hidden" name="action" value="save_status">
+      <div class="form-row">
+        <div class="field" style="grid-column: 1 / -1;">
+          <label for="status_select">Статус</label>
+          {% set st = (user.status if user else '') %}
+          <select id="status_select" name="status">
+            <option value="planned"   {{ 'selected' if st=='planned'   else '' }}>Планирую</option>
+            <option value="watching"  {{ 'selected' if st=='watching'  else '' }}>Смотрю</option>
+            <option value="completed" {{ 'selected' if st=='completed' else '' }}>Завершил</option>
+            <option value="dropped"   {{ 'selected' if st=='dropped'   else '' }}>Дропнул</option>
+          </select>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn-primary" type="submit">Сохранить статус</button>
+      </div>
+    </form>
+
+    {# === ОБЩАЯ ЗАМЕТКА ДЛЯ ФИЛЬМА/СЕРИАЛА === #}
+    <form class="title-user" method="post">
+      <input type="hidden" name="action" value="save_title_note">
+      <div class="field">
+        <label for="title_note">Моя заметка (к фильму/сериалу)</label>
+        <textarea id="title_note" name="title_note" placeholder="Общее впечатление, мысли...">{{ title_note }}</textarea>
+      </div>
+      <div class="actions">
+        <button class="btn-primary" type="submit">Сохранить заметку</button>
+      </div>
+    </form>
+
+    {# === ЗАМЕТКИ ПО СЕРИЯМ (только для TV) === #}
+    {% if media_type == 'tv' %}
+    <div class="section" style="margin-top:1rem;">
+      <h3 style="color:#5b7abd; margin:0 0 .5rem 0;">Заметки по сериям</h3>
+
+      <form method="post" class="title-user" style="margin-bottom:1rem;">
+        <input type="hidden" name="action" value="add_ep_note">
+        <div class="form-row">
+          <div class="field">
+            <label for="ep_season">Сезон</label>
+            <input id="ep_season" name="ep_season" type="number" min="1"
+                   {% if seasons %}max="{{ seasons }}"{% endif %}
+                   value="{{ season_selected or 1 }}">
+          </div>
+          <div class="field">
+            <label for="ep_number">Серия</label>
+            <input id="ep_number" name="ep_number" type="number" min="1" placeholder="1">
+          </div>
+          <div class="field" style="grid-column:1 / -1;">
+            <label for="ep_note">Заметка к серии</label>
+            <textarea id="ep_note" name="ep_note" placeholder="Мысли, моменты, цитаты..."></textarea>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="btn-primary" type="submit">Сохранить заметку</button>
+        </div>
+      </form>
+
+      {% if episode_notes %}
+        <div class="activity-list">
+          {% for n in episode_notes %}
+            <div class="activity-item" style="align-items:flex-start;">
+              <div style="flex:1;">
+                <h4 style="margin:0 0 .25rem 0;">S{{ n.season }}E{{ n.episode }}</h4>
+                <p style="margin:0; color:#cfcfcf;">{{ n.note }}</p>
+                {% if n.updated_at %}
+                  <p style="margin:.35rem 0 0; color:#9aa3af; font-size:.9rem;">
+                    Обновлено: {{ n.updated_at.strftime('%Y.%m.%d %H:%M') }}
+                  </p>
+                {% endif %}
+              </div>
+              <form method="post" style="margin-left:1rem;">
+                <input type="hidden" name="action" value="del_ep_note">
+                <input type="hidden" name="note_id" value="{{ n.id }}">
+                <button class="btn-outline" type="submit">Удалить</button>
+              </form>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="activity-list">
+          <div class="activity-item"><p style="margin:0; color:#9aa3af;">Пока нет заметок по сериям.</p></div>
+        </div>
+      {% endif %}
+    </div>
+    {% endif %}
+  </section>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const tmdbId         = {{ tmdb_id|tojson }};
+  const seasonSelect   = document.getElementById("season_select");
+  const seasonExact    = document.getElementById("season_exact_count");
+  const epSeasonInput  = document.getElementById("ep_season");
+  const hiddenSeason   = document.getElementById("season_hidden");
+  const watchedInput   = document.getElementById("season_watched");
+  const statusSelect   = document.getElementById("season_status");
+
+  async function fetchEpisodesCount(seasonNumber) {
+    const r = await fetch(`/api/tv/${tmdbId}/season/${seasonNumber}`);
+    const data = await r.json();
+    return data.ok ? (data.episodes_count || 0) : 0;
+  }
+
+  async function fetchSeasonProgress(seasonNumber) {
+    const r = await fetch(`/api/tv/${tmdbId}/season/${seasonNumber}/progress`);
+    const data = await r.json();
+    return data.ok ? data : {watched: 0, status: null};
+  }
+
+  async function onSeasonChange(seasonNumber) {
+    // 1) точное число серий
+    const eps = await fetchEpisodesCount(seasonNumber);
+    if (seasonExact) seasonExact.value = (eps ? `${eps} серий` : "— серий");
+    if (watchedInput) {
+      watchedInput.max = String(eps || 0);
+      if (+watchedInput.value > (eps || 0)) watchedInput.value = String(eps || 0);
+    }
+    // 2) синхронизации полей
+    if (hiddenSeason) hiddenSeason.value = String(seasonNumber);
+    if (epSeasonInput) epSeasonInput.value = String(seasonNumber);
+
+    // 3) подставим сохранённый прогресс и статус
+    const prog = await fetchSeasonProgress(seasonNumber);
+    if (watchedInput && typeof prog.watched === "number") {
+      watchedInput.value = String(Math.max(0, Math.min(prog.watched, eps || prog.watched || 0)));
+    }
+    if (statusSelect) {
+      const s = prog.status || "";
+      for (const opt of statusSelect.options) opt.selected = (opt.value === s);
+    }
+  }
+
+  if (seasonSelect) {
+    seasonSelect.addEventListener("change", (e) => onSeasonChange(e.target.value));
+  }
+});
+</script>
+</body>
+</html>

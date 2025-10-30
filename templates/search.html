@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Поиск — MovieTracker</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}">
+<body>
+<header>
+  <!-- ЛОГОТИП / ССЫЛКА НА ГЛАВНУЮ -->
+  <a href="{{ url_for('index') }}" class="header-logo">Rewatch</a>
+
+  <!-- НАВИГАЦИЯ -->
+  <nav>
+    <a href="{{ url_for('catalog') }}"  class="{{ 'active' if request.endpoint=='catalog' else '' }}">Каталог</a>
+    <a href="{{ url_for('my_list') }}"  class="{{ 'active' if request.endpoint=='my_list' else '' }}">Мой список</a>
+    <a href="{{ url_for('stats') }}"    class="{{ 'active' if request.endpoint=='stats' else '' }}">Статистика</a>
+    <a href="{{ url_for('profile') }}"  class="{{ 'active' if request.endpoint in ['profile','edit_profile'] else '' }}">Профиль</a>
+  </nav>
+</header>
+  <div class="container">
+    <div class="toolbar">
+      <h1 style="margin:0">Поиск</h1>
+      <form action="{{ url_for('search_page') }}" method="get">
+        <input type="text" name="q" value="{{ q or '' }}" placeholder="Найти фильм или сериал…">
+        <button class="btn" type="submit">Искать</button>
+      </form>
+    </div>
+
+    {% if q %}
+      <p style="margin:8px 0 16px; color:#666;">Запрос: <strong>{{ q }}</strong></p>
+    {% endif %}
+
+    {% if items and items|length %}
+      <div class="grid">
+        {% for it in items %}
+          <a class="card" href="{{ url_for('title_page', media_type=it.media_type, tmdb_id=it.tmdb_id) }}">
+            {% if it.poster %}
+              <img class="poster" src="{{ it.poster }}" alt="{{ it.title }}">
+            {% else %}
+              <div class="poster placeholder">Нет постера</div>
+            {% endif %}
+            <div class="meta">
+              <div class="title">{{ it.title }}</div>
+              <div class="sub">{{ it.desc or '—' }}</div>
+            </div>
+          </a>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state">
+        {% if q %}
+          <p>По запросу «{{ q }}» ничего не найдено.</p>
+        {% else %}
+          <p>Введите запрос в поле поиска выше.</p>
+        {% endif %}
+      </div>
+    {% endif %}
+
+    <div class="pager">
+      {% set prev = (page or 1) - 1 %}
+      {% set next = (page or 1) + 1 %}
+      {% if q %}
+        {% if prev >= 1 %}
+          <a class="btn" href="{{ url_for('search_page', q=q, page=prev) }}">&larr; Назад</a>
+        {% endif %}
+        <a class="btn" href="{{ url_for('search_page', q=q, page=next) }}">Вперёд &rarr;</a>
+      {% endif %}
+    </div>
+  </div>
+</body>
+</html>

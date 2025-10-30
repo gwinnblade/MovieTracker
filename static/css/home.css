@@ -1,0 +1,115 @@
+.trending-section {
+  padding: 3rem 2rem;
+  background-color: #0f0f0f;
+}
+.trending-section h2 {
+  color: #5b7abd;
+  margin-bottom: 1.5rem;
+  font-size: 1.6rem;
+}
+.trending-section .grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+  gap: 1.5rem;
+}
+.trending-section .card {
+  background: #181818;
+  border: 1px solid #222;
+  border-radius: 12px;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  box-shadow: 0 12px 32px rgba(0,0,0,.35);
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+.trending-section .card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 40px rgba(0,0,0,.45);
+}
+.trending-section .poster {
+  width: 100%;
+  aspect-ratio: 2/3;
+  object-fit: cover;
+  background: #101010;
+}
+.trending-section .meta {
+  padding: 10px;
+}
+.trending-section .title {
+  font-weight: 600;
+  color: #e0e0e0;
+}
+.trending-section .sub {
+  font-size: 0.9rem;
+  color: #a9a9a9;
+}
+
+    /* === Плавающая лента трендовых фильмов === */
+.trending-marquee {
+  position: relative;
+  overflow: hidden;
+  background: #0f0f0f;
+  padding: 1.5rem 0;
+  border-top: 1px solid #222;
+  border-bottom: 1px solid #222;
+}
+
+.trending-marquee h2 {
+  color: #5b7abd;
+  margin: 0 0 1rem 1.2rem;
+  font-size: 1.6rem;
+}
+
+.marquee-inner {
+  display: flex;
+  gap: 1rem;
+  animation: scroll-left 50s linear infinite;
+}
+
+@keyframes scroll-left {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.movie-card {
+  flex: 0 0 auto;
+  width: 160px;
+  text-decoration: none;
+  color: #e0e0e0;
+  text-align: center;
+}
+
+.movie-card img {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid #222;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+  transition: transform 0.3s ease;
+}
+
+.movie-card:hover img {
+  transform: scale(1.05);
+}
+
+.movie-title {
+  font-size: 0.9rem;
+  margin-top: 0.4rem;
+  color: #a9a9a9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+    }
+
+    /* Остановка прокрутки при наведении */
+.trending-marquee:hover .marquee-inner {
+  animation-play-state: paused;
+}
+
+
+

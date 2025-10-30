@@ -1,0 +1,203 @@
+/* === Pages.css — стили для catalog/search =============================== */
+/* Палитра в унисон с main.css */
+:root{
+  --bg: #0f0f0f;
+  --surface: #181818;
+  --surface-2: #141414;
+  --border: #222;
+  --text: #e0e0e0;
+  --muted: #a9a9a9;
+  --accent: #5b7abd;
+  --accent-hover: #638cc0;
+  --shadow: 0 12px 32px rgba(0,0,0,.35), 0 2px 6px rgba(0,0,0,.4);
+  --radius: 12px;
+  --gap: 16px;
+}
+
+/* Контейнер страниц */
+.container{
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+/* Верхняя панель: заголовок + поиск */
+.toolbar{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gap);
+  margin-bottom: 14px;
+}
+.toolbar h1{
+  margin: 0;
+  font-size: 1.4rem;
+  color: var(--accent);
+  letter-spacing: .2px;
+}
+
+/* Поиск */
+.toolbar form{
+  display: flex;
+  gap: 8px;
+}
+.toolbar input[type="text"]{
+  padding: 10px 12px;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  min-width: 260px;
+  outline: none;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.toolbar input[type="text"]::placeholder{ color: #7a7a7a; }
+.toolbar input[type="text"]:focus{
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(91,122,189,.25);
+}
+
+/* Кнопки */
+.btn{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform .08s ease, background .12s ease, border-color .12s ease, color .12s ease;
+}
+.btn:hover{
+  background: #1f1f1f;
+  border-color: #2a2a2a;
+  transform: translateY(-1px);
+}
+.btn:active{ transform: translateY(0); }
+
+/* Табы (Все/Фильмы/Сериалы) */
+.tabs{
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.tab{
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  text-decoration: none;
+  transition: background .12s ease, border-color .12s ease, color .12s ease;
+}
+.tab:hover{
+  background: #1f1f1f;
+  border-color: #2a2a2a;
+}
+.tab.active{
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.tab.active:hover{
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+/* Сетка карточек */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr); /* 6 карточек в ряд */
+  gap: var(--gap);
+  justify-items: center; /* чтобы карточки были по центру */
+}
+
+
+/* Карточка тайтла */
+.card{
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  box-shadow: var(--shadow);
+  transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease, background .12s ease;
+}
+.card:hover{
+  transform: translateY(-2px);
+  border-color: #2c2c2c;
+  background: #1a1a1a;
+  box-shadow: 0 16px 40px rgba(0,0,0,.45), 0 3px 8px rgba(0,0,0,.5);
+}
+
+/* Постер */
+.poster{
+  width: 100%;
+  aspect-ratio: 2/3;
+  object-fit: cover;
+  background: #101010;
+}
+.poster.placeholder{
+  display: grid;
+  place-items: center;
+  color: #8b8b8b;
+  font-size: 13px;
+}
+
+/* Текст карточки */
+.meta{
+  padding: 10px 10px 12px;
+}
+.title{
+  font-weight: 600;
+  line-height: 1.25;
+  margin: 0 0 6px 0;
+  color: var(--text);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.sub{
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.35;
+  max-height: 3.6em;
+  overflow: hidden;
+  word-break: break-word;
+}
+
+/* Пустое состояние */
+.empty-state{
+  margin-top: 18px;
+  padding: 24px;
+  background: var(--surface-2);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  text-align: center;
+  color: var(--muted);
+}
+
+/* Пагинация */
+.pager{
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin: 22px 0 8px;
+}
+
+/* Мелкая адаптивность */
+@media (max-width: 520px){
+  .toolbar{ flex-direction: column; align-items: stretch; }
+  .toolbar form{ width: 100%; }
+  .toolbar input[type="text"]{ width: 100%; min-width: 0; }
+}
+

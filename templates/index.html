@@ -3,10 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel ="stylesheet" href="{{url_for('static', filename='css/main.css')}}">
-    <link rel ="stylesheet" href="{{url_for('static', filename='css/home.css')}}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
   <title>Rewatch — учёт фильмов, сериалов и аниме</title>
+
 </head>
+
 <body>
 <header>
   <!-- ЛОГОТИП / ССЫЛКА НА ГЛАВНУЮ -->
@@ -14,141 +16,140 @@
 
   <!-- НАВИГАЦИЯ -->
   <nav>
-    <a href="{{ url_for('catalog') }}"  class="{{ 'active' if request.endpoint=='catalog' else '' }}">Каталог</a>
-    <a href="{{ url_for('my_list') }}"  class="{{ 'active' if request.endpoint=='my_list' else '' }}">Мой список</a>
-    <a href="{{ url_for('stats') }}"    class="{{ 'active' if request.endpoint=='stats' else '' }}">Статистика</a>
-    <a href="{{ url_for('profile') }}"  class="{{ 'active' if request.endpoint in ['profile','edit_profile'] else '' }}">Профиль</a>
+    <a href="{{ url_for('catalog') }}" class="{{ 'active' if request.endpoint=='catalog' else '' }}">Каталог</a>
+    <a href="{{ url_for('my_list') }}" class="{{ 'active' if request.endpoint=='my_list' else '' }}">Мой список</a>
+    <a href="{{ url_for('stats') }}" class="{{ 'active' if request.endpoint=='stats' else '' }}">Статистика</a>
+    <a href="{{ url_for('profile') }}" class="{{ 'active' if request.endpoint in ['profile','edit_profile'] else '' }}">Профиль</a>
   </nav>
 </header>
 
-  <section class="banner">
-    <h2>Один трекер для всех миров — кино, сериалов и аниме</h2>
-    <p>Управляй своими просмотрами, отмечай любимое и открывай новое в едином пространстве. Интеграции с TMDb, AnimeDb и Telegram помогают не потеряться среди вселенных контента.</p>
-    <a class="btn-primary" href="{{ url_for('start') }}">Начать учёт</a>
-  </section>
+<section class="banner">
+  <h2>Один трекер для всех миров — кино, сериалов и аниме</h2>
+  <p>Управляй своими просмотрами, отмечай любимое и открывай новое в едином пространстве. Интеграции с TMDb, AnimeDb и Telegram помогают не потеряться среди вселенных контента.</p>
+  <a class="btn-primary" href="{{ url_for('start') }}">Начать учёт</a>
+</section>
 
-  <section class="features">
-    <div class="feature-card">
-      <h3>🎞️ Единая библиотека</h3>
-      <p>Добавляй фильмы, сериалы, аниме и мультфильмы в одном профиле.</p>
-    </div>
-    <div class="feature-card">
-      <h3>⭐ Оценки и прогресс</h3>
-      <p>Отмечай просмотренное, ставь оценки и отслеживай свой прогресс.</p>
-    </div>
-    <div class="feature-card">
-      <h3>🤖 Интеграции</h3>
-      <p>Импорт данных из TMDb, напоминания через Telegram.</p>
-    </div>
-  </section>
+<section class="features">
+  <div class="feature-card">
+    <h3>Единая библиотека</h3>
+    <p>Добавляй фильмы, сериалы, аниме и мультфильмы в одном профиле.</p>
+  </div>
+  <div class="feature-card">
+    <h3>Оценки и прогресс</h3>
+    <p>Отмечай просмотренное, ставь оценки и отслеживай свой прогресс.</p>
+  </div>
+  <div class="feature-card">
+    <h3>Интеграции</h3>
+    <p>Импорт данных из TMDb, напоминания через Telegram.</p>
+  </div>
+</section>
 
-    {% if current_user.is_authenticated and has_personal %}
-      <section class="container" style="margin-top: 1rem;">
-        {% if personal_continue %}
-          <div class="section" style="margin-bottom: 1.2rem;">
-            <div class="toolbar" style="display:flex;align-items:center;justify-content:space-between;">
-              <h2 style="margin:0;">Продолжить просмотр</h2>
-              <a href="{{ url_for('my_list') }}" class="auth-link">Мой список →</a>
-            </div>
-            <div class="grid">
-              {% for it in personal_continue %}
-                <a class="card" href="{{ it.href }}">
-                  {% if it.poster %}
-                    <img class="poster" src="{{ it.poster }}" alt="{{ it.title }}">
-                  {% else %}
-                    <div class="poster placeholder">Нет постера</div>
-                  {% endif %}
-                  <div class="meta">
-                    <div class="title">{{ it.title }}</div>
-                    <div class="sub">
-                      {{ it.year }}{% if it.media_type == 'tv' %} • Сериал{% else %} • Фильм{% endif %}
-                      {% if it.rating_user %} • ⭐ {{ it.rating_user }}/10{% endif %}
-                    </div>
-                  </div>
-                </a>
-              {% endfor %}
-            </div>
-          </div>
-        {% endif %}
-
-        {% if personal_recent %}
-          <div class="section" style="margin-bottom: 1.2rem;">
-            <div class="toolbar" style="display:flex;align-items:center;justify-content:space-between;">
-              <h2 style="margin:0;">Недавно добавленные в мой список</h2>
-              <a href="{{ url_for('my_list') }}" class="auth-link">Смотреть всё →</a>
-            </div>
-            <div class="grid">
-              {% for it in personal_recent %}
-                <a class="card" href="{{ it.href }}">
-                  {% if it.poster %}
-                    <img class="poster" src="{{ it.poster }}" alt="{{ it.title }}">
-                  {% else %}
-                    <div class="poster placeholder">Нет постера</div>
-                  {% endif %}
-                  <div class="meta">
-                    <div class="title">{{ it.title }}</div>
-                    <div class="sub">
-                      {{ it.year }}{% if it.media_type == 'tv' %} • Сериал{% else %} • Фильм{% endif %}
-                      {% if it.rating_user %} • ⭐ {{ it.rating_user }}/10{% endif %}
-                    </div>
-                  </div>
-                </a>
-              {% endfor %}
-            </div>
-          </div>
-        {% endif %}
-
-        {% if personal_reco %}
-          <div class="section" style="margin-bottom: 1.2rem;">
-            <div class="toolbar" style="display:flex;align-items:center;justify-content:space-between;">
-              <h2 style="margin:0;">Рекомендовано для вас</h2>
-              <a href="{{ url_for('catalog') }}" class="auth-link">В каталог →</a>
-            </div>
-            <div class="grid">
-              {% for it in personal_reco %}
-                <a class="card" href="{{ it.href }}">
-                  {% if it.poster %}
-                    <img class="poster" src="{{ it.poster }}" alt="{{ it.title }}">
-                  {% else %}
-                    <div class="poster placeholder">Нет постера</div>
-                  {% endif %}
-                  <div class="meta">
-                    <div class="title">{{ it.title }}</div>
-                    <div class="sub">
-                      {{ it.year }}{% if it.media_type == 'tv' %} • Сериал{% else %} • Фильм{% endif %}
-                      {% if it.rating_user %} • ⭐ {{ it.rating_user }}/10{% endif %}
-                    </div>
-                  </div>
-                </a>
-              {% endfor %}
-            </div>
-          </div>
-        {% endif %}
-      </section>
+{% if current_user.is_authenticated and has_personal %}
+  <section class="container" style="margin-top: 1rem;">
+    {% if personal_continue %}
+      <div class="section" style="margin-bottom: 1.2rem;">
+        <div class="toolbar" style="display:flex;align-items:center;justify-content:space-between;">
+          <h2 style="margin:0;">Продолжить просмотр</h2>
+          <a href="{{ url_for('my_list') }}" class="auth-link">Мой список →</a>
+        </div>
+        <div class="grid">
+          {% for it in personal_continue %}
+            <a class="card" href="{{ it.href }}">
+              {% if it.poster %}
+                <img class="poster" src="{{ it.poster }}" alt="{{ it.title }}">
+              {% else %}
+                <div class="poster placeholder">Нет постера</div>
+              {% endif %}
+              <div class="meta">
+                <div class="title">{{ it.title }}</div>
+                <div class="sub">
+                  {{ it.year }}{% if it.media_type == 'tv' %} • Сериал{% else %} • Фильм{% endif %}
+                  {% if it.rating_user %} • ⭐ {{ it.rating_user }}/10{% endif %}
+                </div>
+              </div>
+            </a>
+          {% endfor %}
+        </div>
+      </div>
     {% endif %}
 
-    <section class="trending-section">
-      <h2>🔥 Трендовые фильмы недели</h2>
-      <div class="grid">
-        {% for movie in items %}
-          <a href="{{ url_for('title_page', media_type='movie', tmdb_id=movie.tmdb_id) }}" class="card">
-            {% if movie.poster %}
-              <img src="{{ movie.poster }}" alt="{{ movie.title }}" class="poster">
-            {% else %}
-              <div class="poster placeholder">Нет постера</div>
-            {% endif %}
-            <div class="meta">
-              <h3 class="title">{{ movie.title }}</h3>
-              <p class="sub">{{ movie.year }} • ⭐ {{ movie.rating|round(1) }}</p>
-            </div>
-          </a>
-        {% endfor %}
+    {% if personal_recent %}
+      <div class="section" style="margin-bottom: 1.2rem;">
+        <div class="toolbar" style="display:flex;align-items:center;justify-content:space-between;">
+          <h2 style="margin:0;">Недавно добавленные в мой список</h2>
+          <a href="{{ url_for('my_list') }}" class="auth-link">Смотреть всё →</a>
+        </div>
+        <div class="grid">
+          {% for it in personal_recent %}
+            <a class="card" href="{{ it.href }}">
+              {% if it.poster %}
+                <img class="poster" src="{{ it.poster }}" alt="{{ it.title }}">
+              {% else %}
+                <div class="poster placeholder">Нет постера</div>
+              {% endif %}
+              <div class="meta">
+                <div class="title">{{ it.title }}</div>
+                <div class="sub">
+                  {{ it.year }}{% if it.media_type == 'tv' %} • Сериал{% else %} • Фильм{% endif %}
+                  {% if it.rating_user %} • ⭐ {{ it.rating_user }}/10{% endif %}
+                </div>
+              </div>
+            </a>
+          {% endfor %}
+        </div>
       </div>
-    </section>
+    {% endif %}
 
+    {% if personal_reco %}
+      <div class="section" style="margin-bottom: 1.2rem;">
+        <div class="toolbar" style="display:flex;align-items:center;justify-content:space-between;">
+          <h2 style="margin:0;">Рекомендовано для вас</h2>
+          <a href="{{ url_for('catalog') }}" class="auth-link">В каталог →</a>
+        </div>
+        <div class="grid">
+          {% for it in personal_reco %}
+            <a class="card" href="{{ it.href }}">
+              {% if it.poster %}
+                <img class="poster" src="{{ it.poster }}" alt="{{ it.title }}">
+              {% else %}
+                <div class="poster placeholder">Нет постера</div>
+              {% endif %}
+              <div class="meta">
+                <div class="title">{{ it.title }}</div>
+                <div class="sub">
+                  {{ it.year }}{% if it.media_type == 'tv' %} • Сериал{% else %} • Фильм{% endif %}
+                  {% if it.rating_user %} • ⭐ {{ it.rating_user }}/10{% endif %}
+                </div>
+              </div>
+            </a>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+  </section>
+{% endif %}
 
-  <footer>
-    <p>© 2025 Rewatch | vxksgxny</p>
-  </footer>
+<!-- 🔥 ТРЕНДОВЫЕ ФИЛЬМЫ — ПЛАВАЮЩАЯ ЛЕНТА -->
+<section class="trending-marquee">
+  <h2>🔥 Трендовые фильмы недели</h2>
+  <div class="marquee-inner">
+    {% for movie in items %}
+      <a class="movie-card" href="{{ url_for('title_page', media_type='movie', tmdb_id=movie.tmdb_id) }}">
+        <img src="{{ movie.poster }}" alt="{{ movie.title }}">
+        <div class="movie-title">{{ movie.title }}</div>
+      </a>
+    {% endfor %}
+    {% for movie in items %}
+      <a class="movie-card" href="{{ url_for('title_page', media_type='movie', tmdb_id=movie.tmdb_id) }}">
+        <img src="{{ movie.poster }}" alt="{{ movie.title }}">
+        <div class="movie-title">{{ movie.title }}</div>
+      </a>
+    {% endfor %}
+  </div>
+</section>
+
+<footer>
+  <p>© 2025 Rewatch | vxksgxny</p>
+</footer>
 </body>
 </html>
