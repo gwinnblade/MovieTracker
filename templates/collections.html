@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Коллекции — MovieTracker</title>
+
+  <!-- Базовые стили сайта -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}">
+
+  <!-- Стили для коллекций и унифицированных форм -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/collections.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/form-row.css') }}">
+</head>
+
+<header>
+  <a href="{{ url_for('index') }}" class="header-logo">Rewatch</a>
+    <nav>
+        <a href="{{ url_for('catalog') }}"  class="{{ 'active' if request.endpoint=='catalog' else '' }}">Каталог</a>
+        <a href="{{ url_for('my_list') }}"  class="{{ 'active' if request.endpoint=='my_list' else '' }}">Мой список</a>
+        <a href="{{ url_for('stats') }}"    class="{{ 'active' if request.endpoint=='stats' else '' }}">Статистика</a>
+        <a href="{{ url_for('collections') }}" class="{{ 'active' if request.endpoint in ['collections','collection_view'] else '' }}">Коллекции</a>
+        <a href="{{ url_for('profile') }}"  class="{{ 'active' if request.endpoint in ['profile','edit_profile'] else '' }}">Профиль</a>
+    </nav>
+</header>
+
+<body>
+  <div class="collections-wrap">
+    <div class="collections-toolbar">
+      <div>
+        <h1>Мои коллекции</h1>
+        <div class="subtle">{{ rows|length }} подбор{{ 'ок' if (rows|length)%10 in [0,5,6,7,8,9] else ('ка' if (rows|length)%10==1 else 'ки') }}</div>
+      </div>
+      <a class="btn" href="#create">Создать</a>
+    </div>
+
+    <!-- Сетка коллекций -->
+    <div class="collections-grid">
+      {% for c in rows %}
+        <a class="collection-card" href="{{ url_for('collection_view', cid=c.id) }}">
+          {% if c.cover_url %}
+            <img class="collection-cover" src="{{ c.cover_url }}" alt="{{ c.title }}">
+          {% else %}
+            <div class="collection-cover placeholder">Обложка</div>
+          {% endif %}
+          <div class="collection-meta">
+            <div class="collection-title">{{ c.title }}</div>
+            <div class="collection-sub">{{ c.description or '—' }}</div>
+            <div class="collection-badges">
+              <span class="badge"><span class="dot"></span> {{ 'Публичная' if c.is_public else 'Приватная' }}</span>
+            </div>
+          </div>
+        </a>
+      {% else %}
+        <div class="empty-inline">
+          У тебя пока нет коллекций. Создай первую ниже.
+        </div>
+      {% endfor %}
+
+      <!-- Призрачная карточка "Новая коллекция" -->
+      <a class="collection-card is-ghost" href="#create">
+        <div class="ghost-inner">
+          <div class="plus">+</div>
+          <div>Новая коллекция</div>
+        </div>
+      </a>
+    </div>
+
+    <hr class="hr-soft">
+
+    <!-- Форма создания коллекции -->
+    <form id="create" class="collection-form" method="post" action="{{ url_for('collections') }}">
+      <div class="form-row">
+        <div class="field">
+          <label class="form-label">Название</label>
+          <input class="form-input" type="text" name="title" placeholder="Напр.: Любимое кино 2020-х" required>
+        </div>
+        <div class="field">
+          <label class="form-label">Публичность</label>
+          <label class="checkbox"><input type="checkbox" name="is_public"> Сделать публичной</label>
+        </div>
+      </div>
+
+      <div class="form-row full">
+        <div class="field">
+          <label class="form-label">Описание (опционально)</label>
+          <textarea class="form-input" name="description" rows="3" placeholder="Пара слов о подборке…"></textarea>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn-primary" type="submit">Создать коллекцию</button>
+      </div>
+    </form>
+  </div>
+</body>
+</html>

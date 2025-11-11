@@ -1,0 +1,128 @@
+/* stats.css — страница статистики Rewatch */
+
+.container{
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+.toolbar{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.4rem;
+}
+.toolbar h1{
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #eaeaea;
+  margin: 0;
+}
+
+/* Верхние карточки */
+.stats-cards{
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.stats-card{
+  background: #181818;
+  border: 1px solid #222;
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 12px 32px rgba(0,0,0,.35);
+}
+.stats-card h4{
+  margin: 0 0 .5rem 0;
+  color: #5b7abd;
+}
+.stat-num{
+  font-size: 1.8rem;
+  font-weight: 700;
+  line-height: 1.1;
+  color: #fff;
+}
+.muted{
+  color: #a9a9a9;
+  font-size: .95rem;
+}
+
+/* Бар-графики */
+.row{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: .6rem;
+  margin-top: .5rem;
+}
+.label{
+  color: #e0e0e0;
+  font-size: .95rem;
+}
+.value{
+  color: #a9a9a9;
+  font-size: .9rem;
+  min-width: 42px;
+  text-align: right;
+}
+.bar{
+  background: #141414;
+  border: 1px solid #222;
+  border-radius: 10px;
+  overflow: hidden;
+  height: 10px;
+  margin-top: .35rem;
+}
+.bar-fill{
+  height: 100%;
+  background: #5b7abd;
+  width: 0;
+  transition: width .4s ease;
+}
+
+/* Секции */
+.section{
+  margin: 1.6rem 0 1rem;
+}
+.section h3{
+  margin: 0 0 .7rem;
+  color: #5b7abd;
+  font-size: 1.2rem;
+}
+
+/* Пустое состояние */
+.empty-state{
+  text-align: center;
+  padding: 3rem 1rem;
+  background: #141414;
+  border-radius: 12px;
+  border: 1px dashed #2c2c2c;
+  color: #aaa;
+  line-height: 1.6;
+  margin-top: 1rem;
+}
+
+/* Сетка карточек тайтлов */
+.grid{
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+  gap: 1rem;
+  margin-top: .8rem;
+}
+
+/* Адаптив */
+@media (max-width: 768px){
+  .stats-cards{
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  }
+  .toolbar{
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* Меньше анимаций */
+@media (prefers-reduced-motion: reduce){
+  .bar-fill{ transition: none; }
+}

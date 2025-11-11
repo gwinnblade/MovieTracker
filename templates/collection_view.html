@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ col.title }} — Коллекция — MovieTracker</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/collection.css') }}">
+</head>
+
+<body>
+  <header>
+    <a href="{{ url_for('index') }}" class="header-logo">Rewatch</a>
+    <nav>
+        <a href="{{ url_for('catalog') }}"  class="{{ 'active' if request.endpoint=='catalog' else '' }}">Каталог</a>
+        <a href="{{ url_for('my_list') }}"  class="{{ 'active' if request.endpoint=='my_list' else '' }}">Мой список</a>
+        <a href="{{ url_for('stats') }}"    class="{{ 'active' if request.endpoint=='stats' else '' }}">Статистика</a>
+        <a href="{{ url_for('collections') }}" class="{{ 'active' if request.endpoint in ['collections','collection_view'] else '' }}">Коллекции</a>
+        <a href="{{ url_for('profile') }}"  class="{{ 'active' if request.endpoint in ['profile','edit_profile'] else '' }}">Профиль</a>
+    </nav>
+  </header>
+
+  <div class="container">
+    <div class="toolbar">
+      <div>
+        <h1>{{ col.title }}</h1>
+        <div class="sub">
+          {% if col.is_public %}Публичная{% else %}Приватная{% endif %} • создана {{ col.created_at|dt }}
+        </div>
+
+        {% if col.description %}
+          <p class="collection-desc">{{ col.description }}</p>
+        {% endif %}
+      </div>
+
+      {% if is_owner %}
+      <form class="form" method="post" action="{{ url_for('collection_edit', cid=col.id) }}">
+        <div class="form-row">
+          <label class="form-label">Переименовать</label>
+          <input class="form-input" name="title" value="{{ col.title }}">
+        </div>
+
+        <div class="form-row">
+          <label class="form-label">Описание</label>
+          <textarea class="form-input" name="description" rows="2">{{ col.description or '' }}</textarea>
+        </div>
+
+        <label class="checkbox">
+          <input type="checkbox" name="is_public" {% if col.is_public %}checked{% endif %}> Публичная
+        </label>
+
+        <div class="form-actions">
+          <button class="btn btn-primary" type="submit">Сохранить</button>
+
+          <form method="post" action="{{ url_for('collection_delete', cid=col.id) }}" onsubmit="return confirm('Удалить коллекцию?');">
+            <button class="btn" type="submit">Удалить</button>
+          </form>
+        </div>
+      </form>
+      {% endif %}
+    </div>
+
+    {% if items and items|length %}
+      <div class="grid collection-grid">
+        {% for it in items %}
+          <div class="card">
+            <a href="{{ it.href }}">
+              {% if it.poster %}
+                <img class="poster" src="{{ it.poster }}" alt="{{ it.title }}">
+              {% else %}
+                <div class="poster placeholder">Нет постера</div>
+              {% endif %}
+              <div class="meta">
+                <div class="title">{{ it.title }}</div>
+                <div class="badge-type">{{ it.year or '—' }} · {{ 'Фильм' if it.media_type=='movie' else 'Сериал' }}</div>
+              </div>
+            </a>
+
+            {% if is_owner %}
+              <form class="card-remove" method="post" action="{{ url_for('collection_remove_item', cid=col.id) }}">
+                <input type="hidden" name="media_type" value="{{ it.media_type }}">
+                <input type="hidden" name="tmdb_id" value="{{ it.tmdb_id }}">
+                <button class="btn btn-icon" type="submit" title="Убрать из коллекции">×</button>
+              </form>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state">В этой коллекции пока пусто.</div>
+    {% endif %}
+  </div>
+
+  <script>
+  document.querySelectorAll('textarea').forEach(t => {
+    const resize = e => {
+      e.target.style.height = 'auto';
+      e.target.style.height = e.target.scrollHeight + 'px';
+    };
+    t.addEventListener('input', resize);
+    resize({ target: t });
+  });
+  </script>
+</body>
+</html>
