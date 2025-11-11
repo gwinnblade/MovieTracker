@@ -27,6 +27,13 @@ def as_int(s, default=1):
     except (TypeError, ValueError):
         return default
 
+def ensure_owner(col: "Collection"):
+    if not col or col.user_id != current_user.id:
+        flash("Коллекция не найдена или у тебя нет прав.", "error")
+        return False
+    return True
+
+
 app = Flask(__name__)
 
 cache = Cache(app, config={"CACHE_TYPE": "SimpleCache", "CACHE_DEFAULT_TIMEOUT": 300})
@@ -108,6 +115,39 @@ class TvSeasonProgress(db.Model):
     __table_args__ = (
         db.UniqueConstraint("user_id", "tv_id", "season", name="uq_user_tv_season"),
     )
+
+class Collection(db.Model):
+    __tablename__ = "collection"
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False, index=True)
+
+    title = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    cover_url = db.Column(db.String(255), nullable=True)   # обложка (опционально)
+    is_public = db.Column(db.Boolean, default=False, nullable=False)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    __table_args__ = (
+        db.UniqueConstraint("user_id", "title", name="uq_collection_user_title"),
+    )
+
+
+class CollectionItem(db.Model):
+    __tablename__ = "collection_item"
+    id = db.Column(db.Integer, primary_key=True)
+    collection_id = db.Column(db.Integer, db.ForeignKey("collection.id"), nullable=False, index=True)
+
+    media_type = db.Column(db.String(10), nullable=False)  # "movie" | "tv"
+    tmdb_id = db.Column(db.Integer, nullable=False, index=True)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    __table_args__ = (
+        db.UniqueConstraint("collection_id", "media_type", "tmdb_id", name="uq_collection_item_unique"),
+    )
+
 
 
 
@@ -221,6 +261,7 @@ def api_tv_season_progress(tmdb_id, season_number):
         "watched": (row.watched if row else 0),
         "status": (row.status if row and row.status else None),
     }
+
 
 
 
@@ -471,8 +512,7 @@ def title_page(media_type, tmdb_id):
         if action == "save_title_note":
             text = (request.form.get("title_note") or "").strip()
             um = UserMedia.query.filter_by(
-                user_id=current_user.id, media_type=media_type, tmdb_id=tmdb_id
-            ).first()
+                user_id=current_user.id, media_type=media_type, tmdb_id=tmdb_id).first()
             if not um:
                 um = UserMedia(user_id=current_user.id, media_type=media_type, tmdb_id=tmdb_id)
                 db.session.add(um)
@@ -599,6 +639,12 @@ def title_page(media_type, tmdb_id):
     info = details(media_type, tmdb_id)
     um = UserMedia.query.filter_by(user_id=current_user.id, media_type=media_type, tmdb_id=tmdb_id).first()
 
+    # Коллекции пользователя для выпадающего списка «Добавить в коллекцию»
+    user_cols = []
+    if current_user.is_authenticated:
+        user_cols = Collection.query.filter_by(user_id=current_user.id).order_by(Collection.id.desc()).all()
+
+
     # Общая заметка для фильма/сериала — это um.note
     title_note = (um.note if um and um.note else "")
 
@@ -663,7 +709,7 @@ def title_page(media_type, tmdb_id):
         "episodes": info.get("number_of_episodes") if media_type == "tv" else None,
         "season_progress_watched": season_progress_watched if media_type == "tv" else None,
         "season_progress_status": season_progress_status if media_type == "tv" else None,
-
+        "collections": user_cols,
         # Заметки
         "title_note": title_note,
         "episode_notes": episode_notes,
@@ -801,6 +847,153 @@ def stats():
         "top_items": hydrate(top_rated),
     }
     return render_template("stats.html", **ctx)
+
+@app.route("/collections", methods=["GET", "POST"])
+@login_required
+def collections():
+    if request.method == "POST":
+        title = (request.form.get("title") or "").strip()
+        description = (request.form.get("description") or "").strip() or None
+        is_public = bool(request.form.get("is_public"))
+
+        if not title:
+            flash("Название коллекции не может быть пустым.", "error")
+            return redirect(url_for("collections"))
+
+        # проверка уникальности названия в рамках пользователя
+        exists = Collection.query.filter_by(user_id=current_user.id, title=title).first()
+        if exists:
+            flash("У тебя уже есть коллекция с таким названием.", "error")
+            return redirect(url_for("collections"))
+
+        col = Collection(user_id=current_user.id, title=title, description=description, is_public=is_public)
+        db.session.add(col)
+        db.session.commit()
+        flash("Коллекция создана!", "success")
+        return redirect(url_for("collection_view", cid=col.id))
+
+    rows = Collection.query.filter_by(user_id=current_user.id).order_by(Collection.id.desc()).all()
+    return render_template("collections.html", rows=rows)
+
+@app.route("/collections/<int:cid>")
+@login_required
+def collection_view(cid):
+    col = db.session.get(Collection, cid)
+    if not col:
+        flash("Коллекция не найдена.", "error")
+        return redirect(url_for("collections"))
+
+    # приватные коллекции видны только владельцу
+    if not col.is_public and col.user_id != current_user.id:
+        flash("Эта коллекция приватная.", "error")
+        return redirect(url_for("collections"))
+
+    # грузим элементы и гидратируем карточки через TMDb
+    items_q = CollectionItem.query.filter_by(collection_id=cid).order_by(CollectionItem.id.desc()).all()
+    items = []
+    for it in items_q:
+        try:
+            info = details(it.media_type, it.tmdb_id)
+            items.append({
+                "media_type": it.media_type,
+                "tmdb_id": it.tmdb_id,
+                "title": info.get("title") or info.get("name") or "Без названия",
+                "year": (info.get("release_date") or info.get("first_air_date") or "")[:4],
+                "poster": img_url(info.get("poster_path"), "w342"),
+                "href": url_for("title_page", media_type=it.media_type, tmdb_id=it.tmdb_id),
+            })
+        except Exception:
+            continue
+
+    is_owner = (col.user_id == current_user.id)
+    return render_template("collection_view.html", col=col, items=items, is_owner=is_owner)
+
+@app.route("/collections/<int:cid>/add", methods=["POST"])
+@login_required
+def collection_add_item(cid):
+    col = db.session.get(Collection, cid)
+    if not ensure_owner(col):
+        return redirect(url_for("collections"))
+
+    media_type = (request.form.get("media_type") or "").lower()
+    tmdb_id = parse_int(request.form.get("tmdb_id"))
+
+    if media_type not in {"movie", "tv"} or not tmdb_id:
+        flash("Неверные данные.", "error")
+        return redirect(url_for("collection_view", cid=cid))
+
+    # upsert-защита по уникальному индексу
+    exists = CollectionItem.query.filter_by(collection_id=cid, media_type=media_type, tmdb_id=tmdb_id).first()
+    if exists:
+        flash("Уже в коллекции.", "info")
+    else:
+        db.session.add(CollectionItem(collection_id=cid, media_type=media_type, tmdb_id=tmdb_id))
+        db.session.commit()
+        flash("Добавлено в коллекцию.", "success")
+
+    return redirect(url_for("collection_view", cid=cid))
+
+
+@app.route("/collections/<int:cid>/remove", methods=["POST"])
+@login_required
+def collection_remove_item(cid):
+    col = db.session.get(Collection, cid)
+    if not ensure_owner(col):
+        return redirect(url_for("collections"))
+
+    media_type = (request.form.get("media_type") or "").lower()
+    tmdb_id = parse_int(request.form.get("tmdb_id"))
+    row = CollectionItem.query.filter_by(collection_id=cid, media_type=media_type, tmdb_id=tmdb_id).first()
+    if row:
+        db.session.delete(row)
+        db.session.commit()
+        flash("Удалено из коллекции.", "success")
+    else:
+        flash("Элемента нет в коллекции.", "error")
+    return redirect(url_for("collection_view", cid=cid))
+@app.route("/collections/<int:cid>/edit", methods=["POST"])
+@login_required
+def collection_edit(cid):
+    col = db.session.get(Collection, cid)
+    if not ensure_owner(col):
+        return redirect(url_for("collections"))
+
+    title = (request.form.get("title") or "").strip()
+    description = (request.form.get("description") or "").strip() or None
+    is_public = bool(request.form.get("is_public"))
+
+    if not title:
+        flash("Название не может быть пустым.", "error")
+        return redirect(url_for("collection_view", cid=cid))
+
+    # проверка уникальности названия, кроме текущей коллекции
+    dup = Collection.query.filter(Collection.user_id == current_user.id, Collection.title == title, Collection.id != cid).first()
+    if dup:
+        flash("Другая твоя коллекция уже носит это имя.", "error")
+        return redirect(url_for("collection_view", cid=cid))
+
+    col.title = title
+    col.description = description
+    col.is_public = is_public
+    db.session.commit()
+    flash("Коллекция обновлена.", "success")
+    return redirect(url_for("collection_view", cid=cid))
+
+
+@app.route("/collections/<int:cid>/delete", methods=["POST"])
+@login_required
+def collection_delete(cid):
+    col = db.session.get(Collection, cid)
+    if not ensure_owner(col):
+        return redirect(url_for("collections"))
+    # каскадно удалим элементы
+    CollectionItem.query.filter_by(collection_id=cid).delete()
+    db.session.delete(col)
+    db.session.commit()
+    flash("Коллекция удалена.", "success")
+    return redirect(url_for("collections"))
+
+
 
 
 

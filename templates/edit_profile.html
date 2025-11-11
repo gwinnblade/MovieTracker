@@ -14,12 +14,13 @@
   <a href="{{ url_for('index') }}" class="header-logo">Rewatch</a>
 
   <!-- НАВИГАЦИЯ -->
-  <nav>
-    <a href="{{ url_for('catalog') }}"  class="{{ 'active' if request.endpoint=='catalog' else '' }}">Каталог</a>
-    <a href="{{ url_for('my_list') }}"  class="{{ 'active' if request.endpoint=='my_list' else '' }}">Мой список</a>
-    <a href="{{ url_for('stats') }}"    class="{{ 'active' if request.endpoint=='stats' else '' }}">Статистика</a>
-    <a href="{{ url_for('profile') }}"  class="{{ 'active' if request.endpoint in ['profile','edit_profile'] else '' }}">Профиль</a>
-  </nav>
+    <nav>
+        <a href="{{ url_for('catalog') }}"  class="{{ 'active' if request.endpoint=='catalog' else '' }}">Каталог</a>
+        <a href="{{ url_for('my_list') }}"  class="{{ 'active' if request.endpoint=='my_list' else '' }}">Мой список</a>
+        <a href="{{ url_for('stats') }}"    class="{{ 'active' if request.endpoint=='stats' else '' }}">Статистика</a>
+        <a href="{{ url_for('collections') }}" class="{{ 'active' if request.endpoint in ['collections','collection_view'] else '' }}">Коллекции</a>
+        <a href="{{ url_for('profile') }}"  class="{{ 'active' if request.endpoint in ['profile','edit_profile'] else '' }}">Профиль</a>
+    </nav>
 </header>
 </header>
 <body class="page-auth">
