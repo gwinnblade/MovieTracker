@@ -133,7 +133,7 @@
 .form-row {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
+  gap: 24px;
 }
 .field {
   display: grid;
@@ -214,4 +214,104 @@
   }
   .title-poster { max-width: 280px; }
   .form-row { grid-template-columns: 1fr; }
+}
+
+.title-section {
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+}
+
+.title-episodes {
+  margin-top: 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+}
+
+.episodes-form {
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 12px;
+}
+
+.episodes-form-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 140px));
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.episodes-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.episodes-item {
+  background: var(--surface-2);
+  border-radius: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+}
+
+.episodes-meta {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-bottom: 4px;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.episodes-text {
+  font-size: 0.95rem;
+  margin-bottom: 6px;
+}
+
+.episodes-remove {
+  text-align: right;
+}
+
+.season-box {
+  background: var(--surface);
+  border: 1px solid #2a2a33;
+  border-radius: 14px;
+  padding: 18px 18px 20px;
+  margin-top: 14px;
+  box-shadow: 0 10px 24px rgba(0,0,0,.45);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.season-box__row {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* Грид для выбора сезона */
+.season-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 16px;
+  align-items: end;
+}
+
+/* Чтобы селект не прилипал к кнопке */
+.season-left {
+  grid-column: span 2;
+}
+
+.season-button button {
+  width: 100%;
+  height: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }

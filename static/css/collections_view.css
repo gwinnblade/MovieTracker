@@ -39,18 +39,25 @@
 
 /* --- Форма редактирования (для владельца) --- */
 .form{
-  min-width: 320px;
+  width: 100%;
+  max-width: 100%;
   background: #141414;
-  border: 1px solid #222;
+  border: 1px solid #262833;
   border-radius: 12px;
-  padding: 1rem;
-  box-shadow: 0 6px 16px rgba(0,0,0,.35);
+  padding: 1.2rem 1rem;
+  margin-top: 1.5rem;
+
+  /* Чтобы элементы внутри не ломали блок */
+  box-sizing: border-box;
 }
 
+/* Строки формы */
 .form-row{
-  display: grid;
-  gap: .4rem;
-  margin-bottom: .8rem;
+  display: flex;
+  flex-direction: column;
+  gap: .35rem;
+  margin-bottom: .9rem;
+  width: 100%;
 }
 
 .form-label{
@@ -58,22 +65,32 @@
   color: #bfc4cf;
 }
 
+/* Поля внутри формы */
 .form-input{
-  background: #1a1a1a;
-  color: #e0e0e0;
-  border: 1px solid #2a2a2a;
-  border-radius: 10px;
-  padding: .6rem .8rem;
-  transition: border-color .2s ease, background .2s ease, box-shadow .2s ease;
   width: 100%;
-  resize: vertical;
+  box-sizing: border-box;
+  resize: none;        /* пользователь не растягивает руками */
+  overflow-y: hidden;  /* убираем полосу */
+  min-height: 2.2rem;  /* базовая высота */
+  background: #0f0f0f;
+  color: #e4e4e4;
+
+  border: 1px solid #2a2a2f;
+  border-radius: 9px;
+
+  padding: .65rem .75rem;
+  font-size: .95rem;
+
+  /* Чтобы textarea росла, но не ломала форму */
+  overflow: hidden;
+
+  transition: border-color .15s ease, background .15s ease;
 }
 
 .form-input:focus{
-  outline: none;
   border-color: #5b7abd;
-  background: #1f1f1f;
-  box-shadow: 0 0 0 3px rgba(91,122,189,.18);
+  background: #12121a;
+  outline: none;
 }
 
 .checkbox{

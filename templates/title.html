@@ -50,9 +50,12 @@
 
     {# === СЕЗОНЫ (только для TV) === #}
     {% if media_type == 'tv' and season_options %}
-    <form class="title-user" method="get" action="{{ url_for('title_page', media_type=media_type, tmdb_id=tmdb_id) }}">
-      <div class="form-row">
-        <div class="field">
+    <div class="season-box">
+
+    <form class="title-user season-box__row" method="get" action="{{ url_for('title_page', media_type=media_type, tmdb_id=tmdb_id) }}">
+      <div class="form-row season-grid">
+
+        <div class="field season-left">
           <label for="season_select">Сезон</label>
           <select id="season_select" name="season">
             {% for s in season_options|sort(attribute='num') %}
@@ -62,44 +65,45 @@
             {% endfor %}
           </select>
         </div>
-        <div class="field">
-          <label>Точное число серий (выбранный сезон)</label>
-          <input id="season_exact_count" type="text" value="{{ episodes_count_exact }} серий" readonly>
-        </div>
-        <div class="field" style="align-self:end;">
+          
+
+        <div class="season-button">
           <button class="btn-primary" type="submit">Открыть сезон</button>
         </div>
+
       </div>
     </form>
 
-    {# === ПРОГРЕСС ПО ВЫБРАННОМУ СЕЗОНУ === #}
-    <form class="title-user" method="post" style="margin-top:12px;">
-      <input type="hidden" name="action" value="save_season_progress">
-      <input type="hidden" id="season_hidden" name="season" value="{{ season_selected }}">
-      <div class="form-row">
-        <div class="field">
-          <label for="season_watched">Просмотрено серий в сезоне</label>
-          <input id="season_watched" name="season_watched" type="number" min="0"
-                 max="{{ episodes_count_exact or 0 }}"
-                 value="{{ season_progress_watched or 0 }}">
-          <small class="form-help">Максимум — {{ episodes_count_exact or '—' }}</small>
+
+      {# === ПРОГРЕСС ПО ВЫБРАННОМУ СЕЗОНУ === #}
+      <form class="title-user season-box__row" method="post">
+        <input type="hidden" name="action" value="save_season_progress">
+        <input type="hidden" id="season_hidden" name="season" value="{{ season_selected }}">
+        <div class="form-row">
+          <div class="field">
+            <label for="season_watched">Просмотрено серий в сезоне</label>
+            <input id="season_watched" name="season_watched" type="number" min="0"
+                   max="{{ episodes_count_exact or 0 }}"
+                   value="{{ season_progress_watched or 0 }}">
+          </div>
+          <div class="field">
+            <label for="season_status">Статус сезона</label>
+            {% set sps = (season_progress_status or user_status or None) %}
+            <select id="season_status" name="season_status">
+              <option value=""          {{ 'selected' if not sps else '' }}>—</option>
+              <option value="planned"   {{ 'selected' if sps=='planned'   else '' }}>Планирую</option>
+              <option value="watching"  {{ 'selected' if sps=='watching'  else '' }}>Смотрю</option>
+              <option value="completed" {{ 'selected' if sps=='completed' else '' }}>Завершил</option>
+              <option value="dropped"   {{ 'selected' if sps=='dropped'   else '' }}>Дропнул</option>
+            </select>
+          </div>
+          <div class="field" style="align-self:end;">
+            <button class="btn-primary" type="submit">Сохранить прогресс</button>
+          </div>
         </div>
-        <div class="field">
-          <label for="season_status">Статус сезона</label>
-          {% set sps = (season_progress_status or (user.status if user else None)) %}
-          <select id="season_status" name="season_status">
-            <option value=""          {{ 'selected' if not sps else '' }}>—</option>
-            <option value="planned"   {{ 'selected' if sps=='planned'   else '' }}>Планирую</option>
-            <option value="watching"  {{ 'selected' if sps=='watching'  else '' }}>Смотрю</option>
-            <option value="completed" {{ 'selected' if sps=='completed' else '' }}>Завершил</option>
-            <option value="dropped"   {{ 'selected' if sps=='dropped'   else '' }}>Дропнул</option>
-          </select>
-        </div>
-        <div class="field" style="align-self:end;">
-          <button class="btn-primary" type="submit">Сохранить прогресс</button>
-        </div>
-      </div>
-    </form>
+      </form>
+
+    </div>
     {% endif %}
 
     {# === СТАТУС ТАЙТЛА (movie/tv) === #}
@@ -108,7 +112,7 @@
       <div class="form-row">
         <div class="field" style="grid-column: 1 / -1;">
           <label for="status_select">Статус</label>
-          {% set st = (user.status if user else '') %}
+          {% set st = (user_status or '') %}
           <select id="status_select" name="status">
             <option value="planned"   {{ 'selected' if st=='planned'   else '' }}>Планирую</option>
             <option value="watching"  {{ 'selected' if st=='watching'  else '' }}>Смотрю</option>
@@ -119,6 +123,29 @@
       </div>
       <div class="actions">
         <button class="btn-primary" type="submit">Сохранить статус</button>
+      </div>
+    </form>
+
+    {# === ОЦЕНКА СЕРИАЛА / ФИЛЬМА === #}
+    <form class="title-user" method="post" style="margin-top:12px;">
+      <input type="hidden" name="action" value="save_rating">
+      <div class="form-row">
+        <div class="field" style="grid-column: 1 / -1;">
+          <label for="rating_input">
+            {% if media_type == 'tv' %}Оценка сериала{% else %}Оценка фильма{% endif %}
+          </label>
+          <input
+            id="rating_input"
+            name="rating"
+            type="number"
+            min="1"
+            max="10"
+            value="{{ user_rating or '' }}"
+            placeholder="1–10">
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn-primary" type="submit">Сохранить оценку</button>
       </div>
     </form>
 
@@ -223,7 +250,7 @@ document.addEventListener("DOMContentLoaded", () => {
       watchedInput.max = String(eps || 0);
       if (+watchedInput.value > (eps || 0)) watchedInput.value = String(eps || 0);
     }
-    // 2) синхронизации полей
+    // 2) синхронизация полей
     if (hiddenSeason) hiddenSeason.value = String(seasonNumber);
     if (epSeasonInput) epSeasonInput.value = String(seasonNumber);
 

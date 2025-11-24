@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{ col.title }} — Коллекция — MovieTracker</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/collection.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/collections_view.css') }}">
 </head>
 
 <body>
@@ -92,14 +92,15 @@
   </div>
 
   <script>
-  document.querySelectorAll('textarea').forEach(t => {
-    const resize = e => {
-      e.target.style.height = 'auto';
-      e.target.style.height = e.target.scrollHeight + 'px';
-    };
-    t.addEventListener('input', resize);
-    resize({ target: t });
-  });
+    document.querySelectorAll('textarea').forEach(t => {
+      const resize = e => {
+        t.style.height = 'auto';
+        t.style.height = t.scrollHeight + 'px';
+      };
+
+      t.addEventListener('input', resize);
+      resize();
+    });
   </script>
 </body>
 </html>

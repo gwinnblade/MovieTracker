@@ -540,6 +540,24 @@ def title_page(media_type, tmdb_id):
             flash("Статус обновлён.", "success")
             return redirect(url_for("title_page", media_type=media_type, tmdb_id=tmdb_id))
 
+        if action == "save_rating":
+            rating = _i(request.form.get("rating"), None)
+            if rating is None or not (1 <= rating <= 10):
+                flash("Оценка должна быть от 1 до 10.", "error")
+                return redirect(url_for("title_page", media_type=media_type, tmdb_id=tmdb_id))
+
+            um = UserMedia.query.filter_by(
+                user_id=current_user.id, media_type=media_type, tmdb_id=tmdb_id
+            ).first()
+            if not um:
+                um = UserMedia(user_id=current_user.id, media_type=media_type, tmdb_id=tmdb_id)
+                db.session.add(um)
+
+            um.rating = rating
+            db.session.commit()
+            flash("Оценка сохранена.", "success")
+            return redirect(url_for("title_page", media_type=media_type, tmdb_id=tmdb_id))
+
         # 1.2) Прогресс по сезону (только для сериалов)
         if action == "save_season_progress" and media_type == "tv":
             season = _i(request.form.get("season"), 0) or 0
@@ -710,6 +728,11 @@ def title_page(media_type, tmdb_id):
         "season_progress_watched": season_progress_watched if media_type == "tv" else None,
         "season_progress_status": season_progress_status if media_type == "tv" else None,
         "collections": user_cols,
+
+        # Пользовательские данные
+        "user_status": (um.status if um else None),
+        "user_rating": (um.rating if um else None),
+
         # Заметки
         "title_note": title_note,
         "episode_notes": episode_notes,

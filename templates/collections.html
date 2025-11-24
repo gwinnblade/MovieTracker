@@ -94,5 +94,16 @@
       </div>
     </form>
   </div>
+  <script>
+    document.querySelectorAll('textarea').forEach(t => {
+      const resize = e => {
+        t.style.height = 'auto';
+        t.style.height = t.scrollHeight + 'px';
+      };
+
+      t.addEventListener('input', resize);
+      resize();
+    });
+  </script>
 </body>
 </html>
