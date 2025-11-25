@@ -3,15 +3,22 @@ from flask import Flask, render_template, redirect, url_for, request, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_caching import Cache
+
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from werkzeug.exceptions import RequestEntityTooLarge
+
 from sqlalchemy import UniqueConstraint
-import uuid
+
 from datetime import datetime
+
 from tmdb import trending, details, search, img_url, season_details
-import os
+
 from datetime import datetime
+
+import uuid
+import random
+import os
 
 # --- вспомогательная функция ---
 def parse_int(value, default=None):
@@ -672,40 +679,51 @@ def title_page(media_type, tmdb_id):
 
     if media_type == "tv":
         # Предзаполняем форму прогресса по выбранному сезону
-        season_progress_watched = 0
-        season_progress_status = None
-        if season_selected:
+        episode_notes = []
+        season_options, season_selected, episodes_list, episodes_count_exact = [], None, [], None
+
+        if media_type == "tv":
+            # Все сезоны из TMDb
+            seasons_meta = info.get("seasons") or []
+
+            # Какой сезон выбран в запросе
+            q_season = request.args.get("season")
+            season_selected = _i(q_season, None)
+
+            # Если не передан – берём 1-й, либо первый положительный
+            if not season_selected:
+                nums = [s.get("season_number", 0) for s in seasons_meta]
+                if 1 in nums:
+                    season_selected = 1
+                else:
+                    season_selected = min([n for n in nums if n > 0], default=(nums[0] if nums else 1))
+
             row = TvSeasonProgress.query.filter_by(
                 user_id=current_user.id, tv_id=tmdb_id, season=season_selected
             ).first()
-            if row:
-                season_progress_watched = row.watched or 0
-                season_progress_status = row.status
+            season_progress_watched = row.watched if row else 0
+            season_progress_status = row.status if (row and row.status) else None
 
+            # Кэшируем данные сезона с TMDb
+            cache_key = f"tv:{tmdb_id}:season:{season_selected}"
+            season_data = cache.get(cache_key)
+            if season_data is None:
+                try:
+                    season_data = season_details(tmdb_id, season_selected)
+                except Exception as e:
+                    app.logger.error(f"TMDb season_details error: tv={tmdb_id} s={season_selected}: {e}")
+                    season_data = {"episodes": []}
+                cache.set(cache_key, season_data, timeout=300)
 
-        seasons_meta = info.get("seasons") or []
-        q_season = request.args.get("season")
-        season_selected = _i(q_season, None)
+            episodes_list = season_data.get("episodes", []) or []
+            episodes_count_exact = len(episodes_list)
 
-        if not season_selected:
-            nums = [s.get("season_number", 0) for s in seasons_meta]
-            if 1 in nums:
-                season_selected = 1
-            else:
-                season_selected = min([n for n in nums if n > 0], default=(nums[0] if nums else 1))
-
-        cache_key = f"tv:{tmdb_id}:season:{season_selected}"
-        season_data = cache.get(cache_key)
-        if season_data is None:
-            try:
-                season_data = season_details(tmdb_id, season_selected)
-            except Exception as e:
-                app.logger.error(f"TMDb season_details error: tv={tmdb_id} s={season_selected}: {e}")
-                season_data = {"episodes": []}
-            cache.set(cache_key, season_data, timeout=300)
-
-        episodes_list = season_data.get("episodes", []) or []
-        episodes_count_exact = len(episodes_list)
+            # опцики для селекта сезонов
+            season_options = [{
+                "num": s.get("season_number"),
+                "label": (s.get("name") or f"Сезон {s.get('season_number')}").strip(),
+                "episode_count": s.get("episode_count")
+            } for s in seasons_meta if s.get("season_number") is not None]
 
         season_options = [{
             "num": s.get("season_number"),
@@ -895,8 +913,45 @@ def collections():
         flash("Коллекция создана!", "success")
         return redirect(url_for("collection_view", cid=col.id))
 
+    # все коллекции пользователя
     rows = Collection.query.filter_by(user_id=current_user.id).order_by(Collection.id.desc()).all()
-    return render_template("collections.html", rows=rows)
+
+    # хотим посчитать обложки на лету, если cover_url пустой
+    collection_ids = [c.id for c in rows]
+    covers = {}
+
+    if collection_ids:
+        # забираем все элементы для этих коллекций разом
+        items = CollectionItem.query.filter(
+            CollectionItem.collection_id.in_(collection_ids)
+        ).all()
+
+        items_by_collection = {}
+        for it in items:
+            items_by_collection.setdefault(it.collection_id, []).append(it)
+
+        for col in rows:
+            # если обложка уже задана вручную – используем её
+            if col.cover_url:
+                covers[col.id] = col.cover_url
+                continue
+
+            candidates = items_by_collection.get(col.id) or []
+            if not candidates:
+                continue  # пустая коллекция, будет плейсхолдер
+
+            it = random.choice(candidates)
+            try:
+                info = details(it.media_type, it.tmdb_id)
+                poster_path = info.get("poster_path")
+            except Exception:
+                poster_path = None
+
+            if poster_path:
+                covers[col.id] = img_url(poster_path, "w342")
+
+    return render_template("collections.html", rows=rows, collection_covers=covers)
+
 
 @app.route("/collections/<int:cid>")
 @login_required
@@ -956,6 +1011,45 @@ def collection_add_item(cid):
 
     return redirect(url_for("collection_view", cid=cid))
 
+@app.route("/collections/add_from_title", methods=["POST"])
+@login_required
+def collections_add_from_title():
+    # из формы
+    cid = parse_int(request.form.get("collection_id"))
+    media_type = (request.form.get("media_type") or "").lower()
+    tmdb_id = parse_int(request.form.get("tmdb_id"))
+
+    # подстрахуемся от мусора
+    if media_type not in {"movie", "tv"} or not tmdb_id or not cid:
+        flash("Неверные данные для добавления в коллекцию.", "error")
+        return redirect(url_for("title_page", media_type=media_type or "movie", tmdb_id=tmdb_id or 0))
+
+    col = db.session.get(Collection, cid)
+    if not ensure_owner(col):
+        # чужую коллекцию трогать нельзя
+        flash("Эта коллекция тебе не принадлежит.", "error")
+        return redirect(url_for("title_page", media_type=media_type, tmdb_id=tmdb_id))
+
+    # проверяем, что уже не лежит там
+    exists = CollectionItem.query.filter_by(
+        collection_id=cid,
+        media_type=media_type,
+        tmdb_id=tmdb_id
+    ).first()
+
+    if exists:
+        flash("Этот тайтл уже есть в выбранной коллекции.", "info")
+    else:
+        db.session.add(CollectionItem(
+            collection_id=cid,
+            media_type=media_type,
+            tmdb_id=tmdb_id
+        ))
+        db.session.commit()
+        flash("Добавлено в коллекцию.", "success")
+
+    # возвращаемся обратно на страницу тайтла
+    return redirect(url_for("title_page", media_type=media_type, tmdb_id=tmdb_id))
 
 @app.route("/collections/<int:cid>/remove", methods=["POST"])
 @login_required

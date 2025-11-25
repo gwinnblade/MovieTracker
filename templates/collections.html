@@ -39,11 +39,15 @@
     <div class="collections-grid">
       {% for c in rows %}
         <a class="collection-card" href="{{ url_for('collection_view', cid=c.id) }}">
-          {% if c.cover_url %}
-            <img class="collection-cover" src="{{ c.cover_url }}" alt="{{ c.title }}">
+
+          {% set cover = collection_covers.get(c.id) if collection_covers is defined else c.cover_url %}
+
+          {% if cover %}
+            <img class="collection-cover" src="{{ cover }}" alt="{{ c.title }}">
           {% else %}
             <div class="collection-cover placeholder">Обложка</div>
           {% endif %}
+
           <div class="collection-meta">
             <div class="collection-title">{{ c.title }}</div>
             <div class="collection-sub">{{ c.description or '—' }}</div>
@@ -57,6 +61,7 @@
           У тебя пока нет коллекций. Создай первую ниже.
         </div>
       {% endfor %}
+
 
       <!-- Призрачная карточка "Новая коллекция" -->
       <a class="collection-card is-ghost" href="#create">

@@ -52,28 +52,26 @@
     {% if media_type == 'tv' and season_options %}
     <div class="season-box">
 
-    <form class="title-user season-box__row" method="get" action="{{ url_for('title_page', media_type=media_type, tmdb_id=tmdb_id) }}">
-      <div class="form-row season-grid">
+      <form class="title-user season-box__row" method="get" action="{{ url_for('title_page', media_type=media_type, tmdb_id=tmdb_id) }}">
+        <div class="form-row season-grid">
 
-        <div class="field season-left">
-          <label for="season_select">Сезон</label>
-          <select id="season_select" name="season">
-            {% for s in season_options|sort(attribute='num') %}
-              <option value="{{ s.num }}" {{ 'selected' if s.num == season_selected else '' }}>
-                {{ s.label }}{% if s.episode_count is not none %} — {{ s.episode_count }} серий (TMDb){% endif %}
-              </option>
-            {% endfor %}
-          </select>
+          <div class="field season-left">
+            <label for="season_select">Сезон</label>
+            <select id="season_select" name="season">
+              {% for s in season_options|sort(attribute='num') %}
+                <option value="{{ s.num }}" {{ 'selected' if s.num == season_selected else '' }}>
+                  {{ s.label }}{% if s.episode_count is not none %} — {{ s.episode_count }} серий (TMDb){% endif %}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="season-button">
+            <button class="btn-primary" type="submit">Открыть сезон</button>
+          </div>
+
         </div>
-          
-
-        <div class="season-button">
-          <button class="btn-primary" type="submit">Открыть сезон</button>
-        </div>
-
-      </div>
-    </form>
-
+      </form>
 
       {# === ПРОГРЕСС ПО ВЫБРАННОМУ СЕЗОНУ === #}
       <form class="title-user season-box__row" method="post">
@@ -88,7 +86,7 @@
           </div>
           <div class="field">
             <label for="season_status">Статус сезона</label>
-            {% set sps = (season_progress_status or user_status or None) %}
+            {% set sps = season_progress_status %}
             <select id="season_status" name="season_status">
               <option value=""          {{ 'selected' if not sps else '' }}>—</option>
               <option value="planned"   {{ 'selected' if sps=='planned'   else '' }}>Планирую</option>
@@ -160,6 +158,35 @@
         <button class="btn-primary" type="submit">Сохранить заметку</button>
       </div>
     </form>
+
+    {# === ДОБАВЛЕНИЕ В КОЛЛЕКЦИЮ — ОТДЕЛЬНОЕ ОКОШКО === #}
+    {% if collections %}
+    <form class="title-user" method="post" action="{{ url_for('collections_add_from_title') }}">
+      <input type="hidden" name="media_type" value="{{ media_type }}">
+      <input type="hidden" name="tmdb_id" value="{{ tmdb_id }}">
+
+      <div class="form-row">
+        <div class="field">
+          <label for="collection_id">Добавить в коллекцию</label>
+          <select id="collection_id" name="collection_id">
+            {% for c in collections %}
+              <option value="{{ c.id }}">{{ c.title }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="field" style="align-self:end;">
+          <button class="btn-primary" type="submit">Добавить</button>
+        </div>
+      </div>
+    </form>
+    {% else %}
+    <div class="title-user">
+      <p class="muted">
+        У тебя пока нет коллекций.
+        <a href="{{ url_for('collections') }}">Создай первую →</a>
+      </p>
+    </div>
+    {% endif %}
 
     {# === ЗАМЕТКИ ПО СЕРИЯМ (только для TV) === #}
     {% if media_type == 'tv' %}
@@ -243,18 +270,15 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function onSeasonChange(seasonNumber) {
-    // 1) точное число серий
     const eps = await fetchEpisodesCount(seasonNumber);
     if (seasonExact) seasonExact.value = (eps ? `${eps} серий` : "— серий");
     if (watchedInput) {
       watchedInput.max = String(eps || 0);
       if (+watchedInput.value > (eps || 0)) watchedInput.value = String(eps || 0);
     }
-    // 2) синхронизация полей
     if (hiddenSeason) hiddenSeason.value = String(seasonNumber);
     if (epSeasonInput) epSeasonInput.value = String(seasonNumber);
 
-    // 3) подставим сохранённый прогресс и статус
     const prog = await fetchSeasonProgress(seasonNumber);
     if (watchedInput && typeof prog.watched === "number") {
       watchedInput.value = String(Math.max(0, Math.min(prog.watched, eps || prog.watched || 0)));
