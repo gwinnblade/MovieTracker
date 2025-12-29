@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/register.css') }}">
 </head>
+<body class="page-auth">
 <header>
   <!-- ЛОГОТИП / ССЫЛКА НА ГЛАВНУЮ -->
   <a href="{{ url_for('index') }}" class="header-logo">Rewatch</a>
@@ -20,23 +21,13 @@
         <a href="{{ url_for('profile') }}"  class="{{ 'active' if request.endpoint in ['profile','edit_profile'] else '' }}">Профиль</a>
     </nav>
 </header>
-<body class="page-auth">
   <div class="auth-card">
     <div class="auth-card__header">
-      <span class="badge"><span class="badge__dot"></span> Регистрация</span>
       <h1 class="auth-card__title">Создайте аккаунт</h1>
       <p class="auth-card__subtitle">Собирайте список фильмов и смотрите статистику</p>
     </div>
 
     <div class="auth-card__body">
-      {% with msgs = get_flashed_messages(with_categories=true) %}
-        {% if msgs %}
-          {% for cat, m in msgs %}
-            <div class="flash {{ cat }}">{{ m }}</div>
-          {% endfor %}
-        {% endif %}
-      {% endwith %}
-
       <form class="auth-form" method="post" action="{{ url_for('register') }}">
         <div class="form-row">
           <label class="form-label" for="username">Логин</label>

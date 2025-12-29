@@ -1,4 +1,4 @@
-/* ===== Login page styles (в духе main.css) ===== */
+/* ===== Login page styles (фикс: header full width + inputs overflow) ===== */
 
 :root {
   --bg: #0f0f0f;
@@ -13,20 +13,99 @@
   --shadow: 0 0 10px #00000040;
 }
 
-.page-auth {
-  min-height: 100dvh;
-  background: radial-gradient(900px 500px at 20% -10%, rgba(91,122,189,0.08), transparent 60%),
-              radial-gradient(900px 500px at 80% 110%, rgba(99,140,192,0.08), transparent 60%),
-              linear-gradient(to bottom right, var(--bg), #0b0b0b);
-  display: grid;
-  place-items: center;
-  padding: 2rem;
-  color: var(--text);
+/* Критично: чтобы width/padding не ломали размеры */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
-.auth-card {
+/* ====== BODY страницы логина ====== */
+/* Раньше тут был grid+place-items:center -> он центрировал и header тоже */
+.page-auth {
+  min-height: 100dvh;
+  margin: 0;
+  color: var(--text);
+
+  background:
+    radial-gradient(900px 500px at 20% -10%, rgba(91,122,189,0.08), transparent 60%),
+    radial-gradient(900px 500px at 80% 110%, rgba(99,140,192,0.08), transparent 60%),
+    linear-gradient(to bottom right, var(--bg), #0b0b0b);
+
+  /* ВАЖНО: не центрируем весь body */
+  display: block;
+  padding: 0;
+}
+
+/* ====== HEADER: всегда на всю ширину ====== */
+.page-auth > header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+
   width: 100%;
-  max-width: 480px;
+  left: 0;
+  right: 0;
+
+  margin: 0;
+  padding: 1rem 2rem;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  background-color: rgba(24, 24, 24, 0.92);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+}
+
+/* Лого и навигация, чтобы не “сжимались” */
+.page-auth .header-logo {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--accent);
+  text-decoration: none;
+  letter-spacing: 0.3px;
+  transition: color 0.2s ease, transform 0.15s ease;
+  white-space: nowrap;
+}
+.page-auth .header-logo:hover {
+  color: var(--accent-2);
+  transform: translateY(-1px);
+}
+
+.page-auth nav {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-left: auto;
+  flex-wrap: wrap;
+}
+.page-auth nav a {
+  color: #d0d4de;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 1rem;
+  padding: 0.5rem 0.8rem;
+  border-radius: 8px;
+  transition: color 0.2s ease, background 0.2s ease, transform 0.1s ease;
+}
+.page-auth nav a:hover {
+  color: #ffffff;
+  background: rgba(91, 122, 189, 0.15);
+  transform: translateY(-1px);
+}
+.page-auth nav a.active {
+  color: #fff;
+  background: rgba(91, 122, 189, 0.25);
+  box-shadow: 0 0 8px rgba(91, 122, 189, 0.3);
+}
+
+/* ====== Карточка: центрируем отдельно ====== */
+.auth-card {
+  width: min(480px, calc(100% - 2rem));
+  margin: 5.5rem auto 0; /* отступ, чтобы не липло к header */
   background-color: var(--panel);
   border: 1px solid var(--border);
   border-radius: 16px;
@@ -34,36 +113,35 @@
   overflow: hidden;
 }
 
+/* если хочешь плотнее, можно уменьшить margin-top до 4rem */
 .auth-card__header {
   padding: 1.5rem 1.5rem 0.75rem;
   background: linear-gradient(to bottom, var(--panel-2), var(--panel));
   border-bottom: 1px solid var(--border);
 }
-
 .auth-card__title {
   margin: 0;
   font-size: 1.45rem;
   color: var(--accent);
 }
-
 .auth-card__subtitle {
   margin: 0.25rem 0 0.5rem;
   font-size: 0.95rem;
   color: var(--muted);
 }
+.auth-card__body { padding: 1.5rem; }
 
-.auth-card__body {
-  padding: 1.5rem;
-}
-
+/* ====== Форма ====== */
 .auth-form {
   display: grid;
   gap: 1rem;
+  width: 100%;
 }
 
 .form-row {
   display: grid;
   gap: 0.4rem;
+  width: 100%;
 }
 
 .form-label {
@@ -71,17 +149,27 @@
   color: var(--muted);
 }
 
+/* Фикс “вылезания” */
 .form-input,
 .form-input[type="password"],
 .form-input[type="email"],
 .form-input[type="text"] {
   width: 100%;
+  max-width: 100%;
+  display: block;
+
   background-color: var(--panel-2);
   color: var(--text);
+
   border: 1px solid var(--border);
   border-radius: 10px;
+
   padding: 0.8rem 0.9rem;
   outline: none;
+
+  /* на всякий случай */
+  box-sizing: border-box;
+
   transition: border 0.2s, box-shadow 0.2s;
 }
 
@@ -140,7 +228,6 @@
   cursor: pointer;
   transition: background 0.2s, transform 0.02s;
 }
-
 .btn-primary:hover { background-color: var(--accent-2); }
 .btn-primary:active { transform: translateY(1px); }
 
@@ -170,9 +257,26 @@
   color: #fecaca;
   background: linear-gradient(to right, rgba(239, 68, 68, 0.1), transparent);
 }
+.flash.success {
+  border-color: rgba(34, 197, 94, 0.4);
+  color: #bbf7d0;
+  background: linear-gradient(to right, rgba(34, 197, 94, 0.1), transparent);
+}
 
+/* ====== Мобильная адаптация ====== */
 @media (max-width: 640px) {
-  .auth-card { border-radius: 12px; }
+  .page-auth > header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.6rem;
+    padding: 0.8rem 1.2rem;
+  }
+
+  .auth-card {
+    margin-top: 5rem;
+    border-radius: 12px;
+  }
+
   .auth-card__header { padding: 1.2rem 1.2rem 0.6rem; }
   .auth-card__body { padding: 1.2rem; }
 }
