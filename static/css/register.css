@@ -197,5 +197,12 @@
   font-size: 0.95rem;
 }
 
-.auth-link {
-  color: va
+.auth-link{
+  color: var(--accent)
+}
+
+.auth-messages { display: grid; gap: 10px; margin-bottom: 14px; }
+.auth-message { padding: 10px 12px; border-radius: 12px; font-size: 14px; }
+.auth-message--error { background: rgba(255, 70, 70, 0.12); }
+.auth-message--success { background: rgba(60, 200, 120, 0.12); }
+

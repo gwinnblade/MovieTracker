@@ -1,5 +1,5 @@
 # app.py
-from flask import Flask, render_template, redirect, url_for, request, flash
+from flask import Flask, render_template, redirect, url_for, request, flash, current_app
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_caching import Cache
@@ -9,6 +9,7 @@ from werkzeug.utils import secure_filename
 from werkzeug.exceptions import RequestEntityTooLarge
 
 from sqlalchemy import UniqueConstraint
+from sqlalchemy.exc import IntegrityError
 
 from datetime import datetime
 
@@ -19,8 +20,36 @@ from datetime import datetime
 import uuid
 import random
 import os
+import re
 
-# --- вспомогательная функция ---
+from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
+
+# --- password  ---
+USERNAME_RE = re.compile(r"^[a-zA-Z0-9_\.]{3,30}$")  # латиница, цифры, _ и точка
+
+def normalize_username(s: str) -> str:
+    return (s or "").strip()
+
+def normalize_email(s: str) -> str | None:
+    s = (s or "").strip().lower()
+    return s if s else None
+
+def is_valid_email(email: str) -> bool:
+    # не идеальная RFC магия, но для сайта более чем достаточно
+    return bool(re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email or ""))
+
+def password_policy_errors(password: str) -> list[str]:
+    errs = []
+    if len(password) < 8:
+        errs.append("Пароль должен быть минимум 8 символов.")
+    if password.lower() == password or password.upper() == password:
+        errs.append("Добавь буквы разного регистра.")
+    if not any(ch.isdigit() for ch in password):
+        errs.append("Добавь хотя бы одну цифру.")
+    return errs
+
+# --- вспомогательные функции ---
+
 def parse_int(value, default=None):
     try:
         return int(value)
@@ -40,6 +69,24 @@ def ensure_owner(col: "Collection"):
         return False
     return True
 
+
+# --- PWD RST ---
+def get_serializer():
+    return URLSafeTimedSerializer(app.config["SECRET_KEY"], salt="password-reset")
+
+def generate_reset_token(user_id: int) -> str:
+    s = get_serializer()
+    return s.dumps({"uid": user_id})
+
+def verify_reset_token(token: str, max_age_seconds: int = 3600):
+    s = get_serializer()
+    try:
+        data = s.loads(token, max_age=max_age_seconds)
+        return data.get("uid")
+    except SignatureExpired:
+        return None
+    except BadSignature:
+        return None
 
 app = Flask(__name__)
 
@@ -80,7 +127,7 @@ class Post(db.Model):
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False, index=True)
-    email = db.Column(db.String(255), unique=True, nullable=True, index=True)
+    email = db.Column(db.String(255), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(255), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     avatar_url = db.Column(db.String(255), nullable=True)
@@ -192,6 +239,9 @@ def format_dt(value):
 def too_large(e):
     flash("Файл слишком большой. Максимум 2 МБ.", "error")
     return redirect(url_for("edit_profile"))
+
+
+# -------------- ROUTES ----------------------
 
 @app.route("/profile", methods=["GET"])
 @login_required
@@ -336,44 +386,71 @@ def edit_profile():
 def load_user(user_id):
     return db.session.get(User, int(user_id))
 
-# === Маршруты ===
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
-        username = (request.form.get("username") or "").strip()
-        email = (request.form.get("email") or "").strip().lower() or None
+        username = normalize_username(request.form.get("username"))
+        email = normalize_email(request.form.get("email"))
         password = request.form.get("password") or ""
         confirm = request.form.get("confirm") or ""
 
-        # Простейшая валидация
+        # form всегда хранит строки, чтобы value="" в шаблоне работал стабильно
+        form = {"username": username, "email": email or ""}
+
         if not username or not password:
             flash("Логин и пароль обязательны.", "error")
-            return render_template("register.html")
+            return render_template("register.html", form=form)
+
+        if not USERNAME_RE.match(username):
+            flash("Логин: 3-30 символов, латиница, цифры, _ и точка.", "error")
+            return render_template("register.html", form=form)
+
+        # === НОВОЕ: email обязателен ===
+        if not email:
+            flash("Email обязателен для регистрации.", "error")
+            return render_template("register.html", form=form)
+
+        if not is_valid_email(email):
+            flash("Введите корректный email.", "error")
+            return render_template("register.html", form=form)
+        # =============================
 
         if password != confirm:
             flash("Пароли не совпадают.", "error")
-            return render_template("register.html")
+            return render_template("register.html", form=form)
+
+        pw_errors = password_policy_errors(password)
+        if pw_errors:
+            for e in pw_errors:
+                flash(e, "error")
+            return render_template("register.html", form=form)
 
         if User.query.filter_by(username=username).first():
             flash("Такой логин уже занят.", "error")
-            return render_template("register.html")
+            return render_template("register.html", form=form)
 
-        if email and User.query.filter_by(email=email).first():
+        # email теперь всегда есть, проверяем без "if email"
+        if User.query.filter_by(email=email).first():
             flash("Этот email уже используется.", "error")
-            return render_template("register.html")
+            return render_template("register.html", form=form)
 
-        # Создаём пользователя
-        user = User(username=username, email=email)
-        user.set_password(password)
-        db.session.add(user)
-        db.session.commit()
+        try:
+            user = User(username=username, email=email)
+            user.set_password(password)
+            db.session.add(user)
+            db.session.commit()
+        except IntegrityError:
+            db.session.rollback()
+            flash("Логин или email уже заняты.", "error")
+            return render_template("register.html", form=form)
 
-        # Автовход после регистрации
         login_user(user)
-        flash("Регистрация прошла успешно!", "success")
+        flash("Регистрация успешна!", "success")
         return redirect(url_for("index"))
 
-    return render_template("register.html")
+    return render_template("register.html", form={"username": "", "email": ""})
+
+
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -396,6 +473,72 @@ def login():
         return redirect(next_url or url_for("index"))
 
     return render_template("login.html")
+
+
+@app.route("/forgot-password", methods=["GET", "POST"])
+def forgot_password():
+    if request.method == "POST":
+        email = (request.form.get("email") or "").strip().lower()
+
+        # Всегда отвечаем одинаково, чтобы не палить существование аккаунтов
+        generic_msg = "Если такой email существует, мы отправили ссылку для сброса пароля."
+
+        if not email:
+            flash("Введите email.", "error")
+            return render_template("forgot_password.html")
+
+        user = User.query.filter_by(email=email).first()
+
+        if not user:
+            flash(generic_msg, "success")
+            return redirect(url_for("login"))
+
+        token = generate_reset_token(user.id)
+        reset_link = url_for("reset_password", token=token, _external=True)
+
+        # Временно: печать в консоль
+        print(f"[RESET LINK] {reset_link}")
+
+        # Тут будет отправка email (см. ниже)
+        flash(generic_msg, "success")
+        return redirect(url_for("login"))
+
+    return render_template("forgot_password.html")
+
+
+@app.route("/reset-password/<token>", methods=["GET", "POST"])
+def reset_password(token):
+    uid = verify_reset_token(token, max_age_seconds=3600)
+    if not uid:
+        flash("Ссылка недействительна или устарела. Запросите новую.", "error")
+        return redirect(url_for("forgot_password"))
+
+    user = User.query.get(uid)
+    if not user:
+        flash("Пользователь не найден.", "error")
+        return redirect(url_for("forgot_password"))
+
+    if request.method == "POST":
+        password = request.form.get("password") or ""
+        confirm = request.form.get("confirm") or ""
+
+        if password != confirm:
+            flash("Пароли не совпадают.", "error")
+            return render_template("reset_password.html")
+
+        if len(password) < 8:
+            flash("Пароль должен быть минимум 8 символов.", "error")
+            return render_template("reset_password.html")
+
+        user.set_password(password)  # у тебя уже есть set_password
+        db.session.commit()
+
+        flash("Пароль обновлён. Теперь можно войти.", "success")
+        return redirect(url_for("login"))
+
+    return render_template("reset_password.html")
+
+
 
 @app.route("/start")
 def start():
