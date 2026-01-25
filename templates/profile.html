@@ -86,7 +86,7 @@
 
   <section class="profile-actions">
     <a class="btn-primary" href="{{ url_for('catalog') }}">Добавить тайтл</a>
-    <a class="btn-outline" href="{{ url_for('my_list') }}">Экспортировать список</a>
+    <a class="btn-outline" href="{{ url_for('logout') }}" onclick="return confirm('Вы точно уверены, что хотите выйти из аккаунта?');">Выйти из аккаунта</a>
   </section>
 </main>
 

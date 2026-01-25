@@ -552,7 +552,7 @@ def start():
 def logout():
     logout_user()
     flash("Вы вышли из аккаунта.", "success")
-    return redirect(url_for("index"))
+    return redirect(url_for("login"))
 
 @app.route("/")
 @app.route("/index")
