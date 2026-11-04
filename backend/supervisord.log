@@ -1,0 +1,78 @@
+2026-10-18 12:19:09,395 INFO Set uid to user 0 succeeded
+2026-10-18 12:19:09,399 INFO supervisord started with pid 1
+2026-10-18 12:19:10,401 INFO spawned: 'laravel-queue' with pid 7
+2026-10-18 12:19:10,403 INFO spawned: 'laravel-scheduler' with pid 8
+2026-10-18 12:19:10,406 INFO spawned: 'nginx' with pid 9
+2026-10-18 12:19:10,408 INFO spawned: 'php-fpm' with pid 10
+2026-10-18 12:19:10,528 WARN exited: laravel-queue (exit status 255; not expected)
+2026-10-18 12:19:10,529 WARN exited: laravel-scheduler (exit status 255; not expected)
+2026-10-18 12:19:11,542 INFO spawned: 'laravel-queue' with pid 23
+2026-10-18 12:19:11,544 INFO spawned: 'laravel-scheduler' with pid 24
+2026-10-18 12:19:11,544 INFO success: nginx entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2026-10-18 12:19:11,544 INFO success: php-fpm entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2026-10-18 12:19:11,545 WARN exited: php-fpm (exit status 78; not expected)
+2026-10-18 12:19:11,567 INFO spawned: 'php-fpm' with pid 25
+2026-10-18 12:19:11,569 WARN exited: laravel-queue (exit status 255; not expected)
+2026-10-18 12:19:11,570 WARN exited: laravel-scheduler (exit status 255; not expected)
+2026-10-18 12:19:11,612 WARN exited: php-fpm (exit status 78; not expected)
+2026-10-18 12:19:12,614 INFO spawned: 'php-fpm' with pid 26
+2026-10-18 12:19:12,658 WARN exited: php-fpm (exit status 78; not expected)
+2026-10-18 12:19:13,661 INFO spawned: 'laravel-queue' with pid 27
+2026-10-18 12:19:13,663 INFO spawned: 'laravel-scheduler' with pid 28
+2026-10-18 12:19:13,688 WARN exited: laravel-scheduler (exit status 255; not expected)
+2026-10-18 12:19:13,689 WARN exited: laravel-queue (exit status 255; not expected)
+2026-10-18 12:19:14,692 INFO spawned: 'php-fpm' with pid 29
+2026-10-18 12:19:14,735 WARN exited: php-fpm (exit status 78; not expected)
+2026-10-18 12:19:16,740 INFO spawned: 'laravel-queue' with pid 30
+2026-10-18 12:19:16,742 INFO spawned: 'laravel-scheduler' with pid 31
+2026-10-18 12:19:16,767 WARN exited: laravel-queue (exit status 255; not expected)
+2026-10-18 12:19:16,767 INFO gave up: laravel-queue entered FATAL state, too many start retries too quickly
+2026-10-18 12:19:16,768 WARN exited: laravel-scheduler (exit status 255; not expected)
+2026-10-18 12:19:17,769 INFO gave up: laravel-scheduler entered FATAL state, too many start retries too quickly
+2026-10-18 12:19:17,771 INFO spawned: 'php-fpm' with pid 32
+2026-10-18 12:19:17,817 WARN exited: php-fpm (exit status 78; not expected)
+2026-10-18 12:19:18,819 INFO gave up: php-fpm entered FATAL state, too many start retries too quickly
+2026-10-18 12:21:29,961 INFO reaped unknown pid 87 (exit status 0)
+2026-10-18 12:48:41,779 INFO reaped unknown pid 204 (terminated by SIGKILL)
+2026-10-18 12:49:19,822 INFO reaped unknown pid 211 (terminated by SIGKILL)
+2026-10-18 12:49:25,830 INFO reaped unknown pid 218 (terminated by SIGKILL)
+2026-10-18 12:49:32,838 INFO reaped unknown pid 225 (terminated by SIGKILL)
+2026-10-18 12:49:32,838 INFO reaped unknown pid 232 (terminated by SIGKILL)
+2026-10-18 12:59:22,489 INFO reaped unknown pid 336 (terminated by SIGKILL)
+2026-10-18 12:59:29,498 INFO reaped unknown pid 343 (terminated by SIGKILL)
+2026-10-18 12:59:39,510 INFO reaped unknown pid 350 (terminated by SIGKILL)
+2026-10-18 13:00:06,542 INFO reaped unknown pid 355 (terminated by SIGINT)
+2026-10-18 13:01:47,652 INFO reaped unknown pid 377 (terminated by SIGKILL)
+2026-10-18 13:04:07,807 INFO reaped unknown pid 400 (terminated by SIGKILL)
+2026-10-18 13:04:17,816 INFO reaped unknown pid 407 (terminated by SIGKILL)
+2026-10-18 13:04:25,826 INFO reaped unknown pid 414 (terminated by SIGKILL)
+2026-10-18 13:04:32,834 INFO reaped unknown pid 421 (terminated by SIGKILL)
+2026-10-18 13:04:38,842 INFO reaped unknown pid 428 (terminated by SIGKILL)
+2026-10-18 13:04:44,849 INFO reaped unknown pid 435 (terminated by SIGKILL)
+2026-10-18 13:04:49,855 INFO reaped unknown pid 442 (terminated by SIGKILL)
+2026-10-18 13:04:49,856 INFO reaped unknown pid 449 (terminated by SIGKILL)
+2026-10-18 13:20:15,890 WARN received SIGQUIT indicating exit request
+2026-10-18 13:20:15,893 INFO waiting for nginx to die
+2026-10-18 13:20:16,915 INFO stopped: nginx (exit status 0)
+2026-10-18 13:21:54,096 INFO Set uid to user 0 succeeded
+2026-10-18 13:21:54,101 INFO supervisord started with pid 1
+2026-10-18 13:21:55,105 INFO spawned: 'laravel-queue' with pid 7
+2026-10-18 13:21:55,107 INFO spawned: 'laravel-scheduler' with pid 8
+2026-10-18 13:21:55,109 INFO spawned: 'nginx' with pid 9
+2026-10-18 13:21:55,112 INFO spawned: 'php-fpm' with pid 10
+2026-10-18 13:21:55,278 WARN exited: php-fpm (exit status 78; not expected)
+2026-10-18 13:21:56,280 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2026-10-18 13:21:56,280 INFO success: laravel-scheduler entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2026-10-18 13:21:56,280 INFO success: nginx entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2026-10-18 13:21:56,282 INFO spawned: 'php-fpm' with pid 23
+2026-10-18 13:21:56,332 WARN exited: php-fpm (exit status 78; not expected)
+2026-10-18 13:21:59,327 INFO spawned: 'php-fpm' with pid 30
+2026-10-18 13:21:59,374 WARN exited: php-fpm (exit status 78; not expected)
+2026-10-18 13:22:02,379 INFO spawned: 'php-fpm' with pid 33
+2026-10-18 13:22:02,425 WARN exited: php-fpm (exit status 78; not expected)
+2026-10-18 13:22:03,427 INFO gave up: php-fpm entered FATAL state, too many start retries too quickly
+2026-10-18 13:24:33,253 WARN received SIGQUIT indicating exit request
+2026-10-18 13:24:33,254 INFO waiting for laravel-queue, laravel-scheduler, nginx to die
+2026-10-18 13:24:34,261 INFO stopped: nginx (exit status 0)
+2026-10-18 13:24:35,268 WARN stopped: laravel-scheduler (terminated by SIGTERM)
+2026-10-18 13:24:35,393 INFO stopped: laravel-queue (exit status 0)

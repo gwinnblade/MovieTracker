@@ -1,0 +1,48 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: movietracker_backend
+    restart: unless-stopped
+    ports:
+      - "8080:8000"
+    volumes:
+      - ./backend/database:/var/www/backend/database 
+      - ./backend/storage:/var/www/backend/storage
+    environment:
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - DB_CONNECTION=sqlite
+      - DB_DATABASE=/var/www/backend/database/database.sqlite
+    env_file:
+      - ./backend/.env
+
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    networks:
+      - movietracker_network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: movietracker_frontend
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8080/api
+      - NEXT_PUBLIC_SITE_URL=http://localhost:3001
+      - NODE_ENV=production
+    env_file:
+      - ./frontend/.env
+    depends_on:
+      - backend
+    networks:
+      - movietracker_network
+
+networks:
+  movietracker_network:
+    driver: bridge
