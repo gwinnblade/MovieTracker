@@ -76,7 +76,7 @@ frontend/
    npm run dev
    ```
 
-5. Откройте [http://localhost:3000](http://localhost:3000) в вашем браузере.
+5. Откройте [http://localhost:3001](http://localhost:3001) в вашем браузере.
 
 ---
 
@@ -120,7 +120,7 @@ npm run build
 npm run start
 ```
 
-Приложение будет доступно на [http://localhost:3000](http://localhost:3000).
+Приложение будет доступно на [http://localhost:3001](http://localhost:3001).
 
 ### Деплой через Docker
 
