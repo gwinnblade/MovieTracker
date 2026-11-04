@@ -2,7 +2,7 @@
 
 RESTful API для веб-приложения MovieTracker, обеспечивающее управление каталогом фильмов, пользовательскими списками, системой модерации и интеграцию с внешним API (TMDB).
 
-![Laravel](https://img.shields.io/badge/Laravel-11-FF2D20?logo=laravel)
+![Laravel](https://img.shields.io/badge/Laravel-13-FF2D20?logo=laravel)
 ![PHP](https://img.shields.io/badge/PHP-8.2+-777BB4?logo=php)
 ![SQLite](https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite)
 ![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker)

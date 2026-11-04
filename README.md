@@ -1,7 +1,7 @@
 # MovieTracker
 
-![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js)
-![Laravel](https://img.shields.io/badge/Laravel-11-FF2D20?logo=laravel)
+![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)
+![Laravel](https://img.shields.io/badge/Laravel-13-FF2D20?logo=laravel)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript)
 ![Tailwind](https://img.shields.io/badge/Tailwind-4-06B6D4?logo=tailwindcss)
 ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker)

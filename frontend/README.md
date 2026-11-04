@@ -2,7 +2,7 @@
 
 Современный, быстрый и отзывчивый клиентский интерфейс для веб-приложения MovieTracker. Построен с фокусом на отличный пользовательский опыт (UX), производительность и строгую типизацию.
 
-![Next.js](https://img.shields.io/badge/Next.js-14/15-black?logo=next.js)
+![Next.js](https://img.shields.io/badge/Next.js-15/16-black?logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript)
 ![Tailwind](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss)
 ![React Query](https://img.shields.io/badge/React_Query-FF4154?logo=reactquery)
