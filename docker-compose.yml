@@ -1,0 +1,77 @@
+name: rewatch-port
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: runtime
+    container_name: rewatch_backend
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8081:8000"
+    volumes:
+      - ./backend/database:/var/www/backend/database
+      - ./backend/storage:/var/www/backend/storage
+      - ./legacy:/var/www/legacy:ro
+      - ./static/uploads:/var/www/backend/storage/app/public/legacy:ro
+    environment:
+      - APP_ENV=local
+      - APP_DEBUG=false
+      - DB_CONNECTION=sqlite
+      - DB_DATABASE=/var/www/backend/database/database.sqlite
+    env_file:
+      - ./backend/.env
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/up"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    networks:
+      - movietracker_network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:8081
+        NEXT_PUBLIC_SITE_URL: http://localhost:3002
+    container_name: rewatch_frontend
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3002:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8081
+      - NEXT_PUBLIC_SITE_URL=http://localhost:3002
+      - NODE_ENV=production
+    env_file:
+      - ./frontend/.env
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - movietracker_network
+
+  tests:
+    profiles: ["test"]
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: test
+    environment:
+      APP_ENV: testing
+      DB_CONNECTION: sqlite
+      DB_DATABASE: ":memory:"
+      CACHE_STORE: array
+      SESSION_DRIVER: array
+      MAIL_MAILER: array
+
+networks:
+  movietracker_network:
+    driver: bridge
