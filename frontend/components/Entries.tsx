@@ -1,0 +1,316 @@
+"use client";
+
+import Link from "next/link";
+import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import toast from "react-hot-toast";
+import { api, errorMessage } from "@/lib/api";
+import { RequireAuth, useAuth } from "./Auth";
+import {
+  Button,
+  Checkbox,
+  Empty,
+  ErrorState,
+  Field,
+  Loading,
+  MediaCard,
+  Modal,
+  Pagination,
+  Select,
+} from "./UI";
+
+const dangerButtonClasses =
+  "border-red-500/40! bg-red-500/15! text-red-200! focus-visible:ring-red-500/40! enabled:hover:border-red-500/60! enabled:hover:bg-red-500/25! enabled:hover:text-red-100!";
+
+// Keep overrides for the shared MediaCard local to this list.
+const entryCardClasses = [
+  "group flex h-full min-w-0 flex-col overflow-hidden rounded-2xl border border-white/5 bg-[#151921]",
+  "shadow-[0_8px_24px_rgba(0,0,0,0.25)] transition-all duration-300",
+  "hover:-translate-y-1 hover:border-[#E5A93D]/20 hover:shadow-[0_0_20px_rgba(229,169,61,0.15)]",
+  "focus-within:border-[#E5A93D]/20 motion-reduce:hover:translate-y-0 motion-reduce:transition-none",
+  "[&_.media-card]:rounded-none! [&_.media-card]:border-0! [&_.media-card]:bg-transparent!",
+  "[&_.media-card]:p-0! [&_.media-card]:shadow-none! [&_.media-card]:transform-none!",
+  "[&_.poster-wrap]:overflow-hidden [&_.poster-wrap]:rounded-none!",
+  "[&_.poster-wrap::after]:bg-[linear-gradient(to_top,rgba(11,14,20,0.92),transparent_70%)]!",
+  "[&_.poster-wrap::after]:opacity-0! [&_.poster-wrap::after]:duration-300!",
+  "hover:[&_.poster-wrap::after]:opacity-100! focus-within:[&_.poster-wrap::after]:opacity-100!",
+  "[&_.media-card_h3]:mx-3! [&_.media-card_h3]:mt-3! [&_.media-card_h3]:mb-0!",
+  "[&_.media-card_h3]:h-10! [&_.media-card_h3]:min-h-0! [&_.media-card_h3]:line-clamp-2!",
+  "[&_.media-card_h3]:text-sm! [&_.media-card_h3]:font-semibold! [&_.media-card_h3]:leading-5! [&_.media-card_h3]:text-white!",
+  "[&_.media-meta]:mx-3! [&_.media-meta]:mt-1! [&_.media-meta]:mb-3! [&_.media-meta]:h-5! [&_.media-meta]:gap-2!",
+  "[&_.media-meta]:text-xs! [&_.media-meta]:text-zinc-500!",
+  "[&_.media-meta_p]:min-w-0 [&_.media-meta_p]:truncate! [&_.media-meta_p]:text-xs! [&_.media-meta_p]:text-zinc-500!",
+  "[&_.media-type]:shrink-0 [&_.media-type]:text-xs! [&_.media-type]:font-normal! [&_.media-type]:text-zinc-500!",
+].join(" ");
+
+// Inline Lucide SVG paths; no additional dependency is needed.
+const iconPaths = {
+  plus: ["M5 12h14", "M12 5v14"],
+  trash: [
+    "M3 6h18",
+    "M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6",
+    "M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2",
+  ],
+  check: ["M20 6 9 17l-5-5"],
+};
+
+function ListIcon({
+  name,
+  className = "size-4 shrink-0",
+}: {
+  name: keyof typeof iconPaths;
+  className?: string;
+}) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+      focusable="false"
+    >
+      {iconPaths[name].map((path) => (
+        <path key={path} d={path} />
+      ))}
+    </svg>
+  );
+}
+
+export default function Entries() {
+  const { user } = useAuth();
+  const cache = useQueryClient();
+  const [status, setStatus] = useState("");
+  const [type, setType] = useState("");
+  const [rated, setRated] = useState(false);
+  const [sort, setSort] = useState("added");
+  const [page, setPage] = useState(1);
+  const [remove, setRemove] = useState<number | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const data = useQuery({
+    queryKey: ["entries", user?.id, status, type, rated, sort, page],
+    queryFn: () =>
+      api.entries({
+        status_id: status || undefined,
+        type_id: type || undefined,
+        rated: rated ? 1 : 0,
+        sort,
+        page,
+      }),
+    enabled: !!user,
+  });
+
+  const statuses = useQuery({
+    queryKey: ["statuses"],
+    queryFn: () => api.references("statuses"),
+  });
+
+  const types = useQuery({
+    queryKey: ["types"],
+    queryFn: () => api.references("types"),
+  });
+
+  const changed = (fn: () => void) => {
+    fn();
+    setPage(1);
+  };
+
+  return (
+    <RequireAuth>
+      <header className="mb-6 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+        <div className="min-w-0">
+          <span className="mb-2 block text-xs font-semibold tracking-widest text-[#E5A93D]">
+            ТВОЯ БИБЛИОТЕКА
+          </span>
+          <h1 className="text-3xl! font-bold! tracking-tight! text-white">
+            Мой список
+          </h1>
+          <p className="mt-2! text-sm text-zinc-500">
+            То, что смотрел, смотришь и хочешь посмотреть.
+          </p>
+        </div>
+        <Link
+          className="button group w-full shrink-0 sm:w-auto"
+          href="/catalog"
+        >
+          <ListIcon
+            name="plus"
+            className="size-4 shrink-0 transition-transform duration-300 group-hover:rotate-90"
+          />
+          Найти фильм
+        </Link>
+      </header>
+
+      <div className="mb-8 grid grid-cols-1 items-end gap-4 rounded-2xl border border-white/5 bg-[#151921]/80 p-4 shadow-[0_8px_30px_rgba(0,0,0,0.18)] backdrop-blur-md sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1.25fr_auto]">
+        <Field label="Статус">
+          <Select
+            value={status}
+            onChange={(e) => changed(() => setStatus(e.target.value))}
+          >
+            <option value="">Все статусы</option>
+            {statuses.data?.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.name_ru}
+              </option>
+            ))}
+          </Select>
+        </Field>
+        <Field label="Тип">
+          <Select
+            value={type}
+            onChange={(e) => changed(() => setType(e.target.value))}
+          >
+            <option value="">Все типы</option>
+            {types.data?.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.name_ru}
+              </option>
+            ))}
+          </Select>
+        </Field>
+        <Field label="Сортировать">
+          <Select
+            value={sort}
+            onChange={(e) => changed(() => setSort(e.target.value))}
+          >
+            <option value="added">По добавлению</option>
+            <option value="rating_desc">Сначала высокие оценки</option>
+            <option value="rating_asc">Сначала низкие оценки</option>
+          </Select>
+        </Field>
+        <label className="flex h-12 cursor-pointer items-center gap-3 rounded-xl bg-white/[0.02] px-3 text-sm text-zinc-400 transition-colors duration-300 hover:text-zinc-200">
+          <Checkbox
+            checked={rated}
+            onChange={(e) => changed(() => setRated(e.target.checked))}
+          />
+          <span className="whitespace-nowrap">Только с оценкой</span>
+        </label>
+      </div>
+
+      {data.isPending ? (
+        <Loading />
+      ) : data.error ? (
+        <ErrorState error={data.error} retry={() => data.refetch()} />
+      ) : data.data?.data.length ? (
+        <>
+          <div className="grid auto-rows-fr grid-cols-2 items-stretch gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+            {data.data.data.map((entry) => (
+              <article className={entryCardClasses} key={entry.id}>
+                <MediaCard media={entry.media} rating={entry.rating} />
+                <div className="flex min-h-[140px] flex-1 flex-col gap-2 border-t border-white/5 bg-[#0B0E14]/35 p-3">
+                  <div className="flex min-h-8 shrink-0 items-center justify-between gap-2">
+                    <span
+                      className={`min-w-0 max-w-[60%] truncate rounded-full border px-3 py-1.5 text-[11px] font-medium leading-none ${
+                        entry.status?.code === "watching" ||
+                        entry.status?.name_ru === "Смотрю"
+                          ? "border-[#E5A93D]/30 bg-[#E5A93D]/10 text-[#E5A93D]"
+                          : "border-white/5 bg-white/5 text-zinc-400"
+                      }`}
+                      title={entry.status?.name_ru}
+                    >
+                      {entry.status?.name_ru}
+                    </span>
+                    <button
+                      type="button"
+                      className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg text-zinc-600 transition-all duration-300 group-hover:text-zinc-400 hover:bg-red-500/10 hover:text-red-500! hover:shadow-[0_0_12px_rgba(239,68,68,0.2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/40 active:scale-95 motion-reduce:active:scale-100 motion-reduce:transition-none"
+                      aria-label={`Удалить «${entry.media.title_ru}» из списка`}
+                      title="Удалить"
+                      onClick={() => setRemove(entry.id)}
+                    >
+                      <ListIcon name="trash" />
+                    </button>
+                  </div>
+
+                  {!!entry.episodes_watched && (
+                    <span
+                      className="inline-flex max-w-full shrink-0 items-center gap-1.5 self-start rounded-md border border-white/5 bg-white/[0.02] px-2 py-0.5 text-[11px] leading-none text-zinc-400"
+                      title={`${entry.episodes_watched} серий просмотрено`}
+                    >
+                      <ListIcon
+                        name="check"
+                        className="size-3 shrink-0 text-[#E5A93D]"
+                      />
+                      <span className="truncate">
+                        {entry.episodes_watched} серий просмотрено
+                      </span>
+                    </span>
+                  )}
+
+                  {entry.note && (
+                    <div className="mt-auto pt-2">
+                      <blockquote
+                        className="flex min-w-0 flex-col justify-center rounded-r-lg border-l-2 border-[#E5A93D] bg-[#151921] bg-gradient-to-r from-[#E5A93D]/5 to-transparent p-3 text-sm leading-5 italic text-zinc-400"
+                        title={entry.note}
+                      >
+                        <p className="line-clamp-2 [overflow-wrap:anywhere]">
+                          {entry.note}
+                        </p>
+                      </blockquote>
+                    </div>
+                  )}
+                </div>
+              </article>
+            ))}
+          </div>
+          <Pagination
+            page={page}
+            last={data.data.last_page}
+            total={data.data.total}
+            onChange={setPage}
+          />
+        </>
+      ) : (
+        <Empty title="Здесь будут твои истории">
+          <p>Сохрани первый фильм или измени фильтры.</p>
+          <Link href="/catalog" className="button">
+            Открыть кино
+          </Link>
+        </Empty>
+      )}
+
+      {remove !== null && (
+        <Modal
+          title="Удалить из личного списка?"
+          onClose={() => setRemove(null)}
+        >
+          <p className="leading-relaxed text-zinc-300">
+            Оценка и общая заметка к фильму будут удалены. Коллекции и заметки к
+            сериям сохранятся.
+          </p>
+          <div className="form-actions">
+            <Button
+              variant="secondary"
+              className={dangerButtonClasses}
+              disabled={busy}
+              onClick={async () => {
+                setBusy(true);
+                try {
+                  await api.deleteEntry(remove);
+                  setRemove(null);
+                  await cache.invalidateQueries({ queryKey: ["entries"] });
+                  await cache.invalidateQueries({ queryKey: ["profile"] });
+                  await cache.invalidateQueries({ queryKey: ["tracking"] });
+                  toast.success("Запись удалена");
+                } catch (error) {
+                  toast.error(errorMessage(error));
+                } finally {
+                  setBusy(false);
+                }
+              }}
+            >
+              Удалить
+            </Button>
+            <Button variant="secondary" onClick={() => setRemove(null)}>
+              Отмена
+            </Button>
+          </div>
+        </Modal>
+      )}
+    </RequireAuth>
+  );
+}
