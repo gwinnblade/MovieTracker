@@ -1,5 +1,4 @@
 "use client";
-
 import Link from "next/link";
 import {
   ArrowRightOnRectangleIcon,
@@ -17,7 +16,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import toast from "react-hot-toast";
 import { useAuth } from "./Auth";
 import { errorMessage } from "@/lib/api";
-import { Button, Input } from "./UI";
+import { Button, Input, Artwork } from "./UI";
 
 const accountLinks = [
   ["/profile", "Мой профиль", UserCircleIcon],
@@ -113,8 +112,8 @@ export default function Header() {
   return (
     <>
       <header
-        className={`site-header border-b border-white/[0.06]! transition-shadow duration-300 hover:shadow-[0_1px_0_0_rgba(229,169,61,0.15)] ${
-          menu ? "z-20!" : ""
+        className={`site-header sticky top-0 z-40 border-b-2 border-white/10 bg-[var(--bg)] ${
+          menu ? "z-50" : ""
         }`}
       >
         <div className="header-inner">
@@ -126,7 +125,7 @@ export default function Header() {
             <svg
               viewBox="0 0 32 32"
               aria-hidden="true"
-              className="-rotate-6 transition-[filter,rotate] duration-300 group-hover:rotate-0 group-hover:drop-shadow-[0_0_8px_rgba(229,169,61,0.6)]"
+              className="-rotate-6 transition-transform duration-150 group-hover:rotate-0"
             >
               <path d="M25 10a11 11 0 1 0 1 11M25 3v8h-8" />
               <path d="m13 10 9 6-9 6z" />
@@ -136,31 +135,34 @@ export default function Header() {
 
           <nav
             aria-label="Главное меню"
-            className="hidden min-w-0 flex-1 items-center gap-1 xl:flex"
+            className="hidden min-w-0 flex-1 items-center gap-0 xl:flex"
           >
-            {nav.map(([href, text]) => (
-              <Link
-                key={href}
-                href={href}
-                className={
-                  path.startsWith(href)
-                    ? "inline-flex items-center gap-2 rounded-lg border border-gold/20 bg-gold/10 px-3 py-1.5 text-xs font-semibold whitespace-nowrap text-gold! before:size-1 before:rounded-full before:bg-gold before:content-['']"
-                    : "inline-flex items-center rounded-lg border border-transparent px-3 py-1.5 text-xs font-semibold whitespace-nowrap text-zinc-400! transition-colors duration-200 hover:bg-white/[0.03] hover:text-white!"
-                }
-              >
-                {text}
-              </Link>
-            ))}
+            {nav.map(([href, text]) => {
+              const isActive = path.startsWith(href);
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  className={
+          isActive
+            ? "inline-flex items-center border-2 border-[var(--accent)] bg-[var(--accent)] px-3 py-1.5 font-mono text-[11px] font-black uppercase tracking-widest text-[var(--bg)]! shadow-[3px_3px_0px_0px_var(--text)]"
+            : "inline-flex items-center border-2 border-transparent px-3 py-1.5 font-mono text-[11px] font-black uppercase tracking-widest text-[var(--muted)] transition-colors duration-150 hover:border-white/20 hover:text-[var(--text)]"
+        }
+                >
+                  {text}
+                </Link>
+              );
+            })}
           </nav>
 
-          <div className="hidden shrink-0 items-center gap-2 xl:flex">
+          <div className="hidden shrink-0 items-center gap-3 xl:flex">
             <form
               onSubmit={search}
               role="search"
-              className="group/search relative w-56 rounded-xl transition-[width,box-shadow] duration-300 focus-within:w-72 focus-within:shadow-[0_0_15px_rgba(229,169,61,0.15)]"
+              className="group/search relative w-56 transition-[width] duration-150 focus-within:w-72"
             >
               <MagnifyingGlassIcon
-                className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-zinc-500 transition-colors duration-200 group-focus-within/search:text-gold"
+                className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-[var(--subtle)] transition-colors duration-150 group-focus-within/search:text-[var(--accent)]"
                 aria-hidden="true"
               />
               <Input
@@ -169,12 +171,12 @@ export default function Header() {
                 aria-label="Поиск по TMDB"
                 minLength={2}
                 required
-                className="min-h-11! rounded-xl! bg-white/[0.03]! pr-11! pl-10! text-[13px]! focus:ring-0!"
+                className="min-h-11! border-2! border-white/10! bg-[var(--panel)]! pr-11! pl-10! text-[13px]! focus:border-[var(--accent)]! focus:ring-0!"
               />
               <button
                 type="submit"
                 aria-label="Искать"
-                className="absolute top-1/2 right-1.5 grid size-8 -translate-y-1/2 place-items-center rounded-lg text-zinc-500 transition-colors duration-200 hover:bg-gold/10 hover:text-gold focus-visible:text-gold"
+                className="absolute top-1/2 right-1.5 grid size-8 -translate-y-1/2 place-items-center text-[var(--subtle)] transition-colors duration-150 hover:bg-[var(--accent)] hover:text-[var(--bg)]"
               >
                 <MagnifyingGlassIcon className="size-4" aria-hidden="true" />
               </button>
@@ -188,18 +190,26 @@ export default function Header() {
                     aria-haspopup="menu"
                     aria-expanded={dropdownOpen}
                     onClick={() => setDropdownOpen((open) => !open)}
-                    className="flex min-h-11 items-center gap-2 rounded-xl px-3 py-2 text-zinc-200 transition-colors duration-200 hover:bg-white/[0.05]"
+                    className="flex min-h-11 items-center gap-2 border-2 border-white/10 bg-[var(--panel)] px-3 py-2 transition-colors duration-150 hover:border-white/30"
                   >
-                    <span className="grid size-8 shrink-0 place-items-center rounded-full border border-gold/30 bg-gold/10 text-[11px] font-bold text-gold">
-                      {initials || (
-                        <UserCircleIcon className="size-5" aria-hidden="true" />
-                      )}
-                    </span>
-                    <span className="max-w-24 truncate text-[13px] font-semibold">
+                    {user.avatar_url ? (
+                      <Artwork
+                        src={user.avatar_url}
+                        alt={user.name}
+                        className="size-8 shrink-0 border-2 border-[var(--accent)]"
+                      />
+                    ) : (
+                      <span className="grid size-8 shrink-0 place-items-center border-2 border-[var(--accent)] bg-[var(--accent)] font-mono text-[11px] font-black uppercase text-[var(--bg)]">
+                        {initials || (
+                          <UserCircleIcon className="size-5" aria-hidden="true" />
+                        )}
+                      </span>
+                    )}
+                    <span className="max-w-24 truncate font-mono text-[11px] font-black uppercase tracking-widest text-[var(--text)]">
                       {user.name}
                     </span>
                     <ChevronDownIcon
-                      className={`size-3.5 shrink-0 text-zinc-500 transition-transform duration-300 ${
+                      className={`size-3.5 shrink-0 text-[var(--muted)] transition-transform duration-150 ${
                         dropdownOpen ? "rotate-180" : ""
                       }`}
                       aria-hidden="true"
@@ -209,56 +219,59 @@ export default function Header() {
                   <div
                     role="menu"
                     aria-hidden={!dropdownOpen}
-                    className={`absolute top-full right-0 z-50 mt-2 w-56 origin-top-right rounded-2xl border border-white/10 bg-[#151921]/95 p-2 shadow-[0_20px_60px_rgba(0,0,0,0.5)] backdrop-blur-xl transition-[opacity,scale,visibility] duration-200 ${
+                    className={`absolute top-full right-0 z-50 mt-2 w-60 border-2 border-white/10 bg-[var(--panel)] shadow-[8px_8px_0px_0px_var(--accent)] transition-[opacity,transform,visibility] duration-150 ${
                       dropdownOpen
-                        ? "visible scale-100 opacity-100"
-                        : "invisible scale-95 opacity-0"
+                        ? "visible translate-y-0 opacity-100"
+                        : "invisible -translate-y-2 opacity-0"
                     }`}
                   >
-                    <div className="px-3 py-2">
-                      <span className="block text-[10px] font-bold tracking-[0.19em] text-gold uppercase">
-                        Аккаунт
+                    <div className="border-b-2 border-white/10 px-4 py-3">
+                      <span className="block font-mono text-[10px] font-black uppercase tracking-widest text-[var(--accent)]">
+                        [ Аккаунт ]
                       </span>
-                      <span className="mt-0.5 block truncate text-[13px] font-semibold text-white">
+                      <span className="mt-1 block truncate font-mono text-[13px] font-black uppercase tracking-tight text-[var(--text)]">
                         {user.name}
                       </span>
                     </div>
-                    <div className="my-1 border-t border-white/5" />
                     {accountLinks.map(([href, label, Icon]) => (
                       <Link
                         key={href}
                         href={href}
                         role="menuitem"
                         onClick={() => setDropdownOpen(false)}
-                        className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-[13px] font-medium text-zinc-300! transition-colors duration-200 hover:bg-white/[0.05] hover:text-white!"
+                        className="flex min-h-11 items-center gap-3 border-b-2 border-white/5 px-4 font-mono text-[11px] font-black uppercase tracking-widest text-[var(--muted)] transition-colors duration-150 hover:bg-white/5 hover:text-[var(--text)] last:border-b-0"
                       >
                         <Icon
-                          className="size-4 shrink-0 text-zinc-500"
+                          className="size-4 shrink-0 text-[var(--subtle)]"
                           aria-hidden="true"
                         />
                         {label}
                       </Link>
                     ))}
-                    <div className="my-1 border-t border-white/5" />
-                    <Button
-                      variant="ghost"
-                      role="menuitem"
-                      className="min-h-11! w-full justify-start! gap-3! rounded-xl! px-3! py-2! text-[13px]! font-medium! text-red-400! enabled:hover:bg-red-500/10! enabled:hover:text-red-300!"
-                      onClick={() => {
-                        setDropdownOpen(false);
-                        void signOut();
-                      }}
-                    >
-                      <ArrowRightOnRectangleIcon
-                        className="size-4 shrink-0"
-                        aria-hidden="true"
-                      />
-                      Выйти
-                    </Button>
+                    <div className="p-2">
+                      <Button
+                        variant="ghost"
+                        role="menuitem"
+                        className="min-h-11! w-full justify-start! gap-3! border-2! border-transparent! px-3! py-2! font-mono! text-[11px]! font-black! uppercase! tracking-widest! text-[var(--red)]! hover:border-[var(--red)]! hover:bg-[var(--red)]/10!"
+                        onClick={() => {
+                          setDropdownOpen(false);
+                          void signOut();
+                        }}
+                      >
+                        <ArrowRightOnRectangleIcon
+                          className="size-4 shrink-0"
+                          aria-hidden="true"
+                        />
+                        Выйти
+                      </Button>
+                    </div>
                   </div>
                 </div>
               ) : (
-                <Link className="button shrink-0" href="/login">
+                <Link
+                  className="inline-flex items-center border-2 border-[var(--accent)] bg-[var(--accent)] px-5 py-2.5 font-mono text-[11px] font-black uppercase tracking-widest text-[var(--bg)] shadow-[4px_4px_0px_0px_var(--text)] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[6px_6px_0px_0px_var(--text)] active:translate-x-0 active:translate-y-0 active:shadow-none"
+                  href="/login"
+                >
                   Войти
                 </Link>
               ))}
@@ -269,7 +282,7 @@ export default function Header() {
             aria-label="Меню"
             aria-expanded={menu}
             onClick={() => setMenu(!menu)}
-            className="ml-auto grid size-11 shrink-0 place-items-center rounded-full border border-white/10 bg-white/[0.03] text-zinc-300 transition-colors duration-200 hover:bg-white/[0.08] hover:text-white xl:hidden"
+            className="ml-auto grid size-11 shrink-0 place-items-center border-2 border-white/10 bg-[var(--panel)] text-[var(--text)] transition-colors duration-150 hover:border-[var(--accent)] hover:text-[var(--accent)] xl:hidden"
           >
             {menu ? (
               <XMarkIcon className="size-5" aria-hidden="true" />
@@ -283,7 +296,7 @@ export default function Header() {
       <div
         onClick={() => setMenu(false)}
         aria-hidden="true"
-        className={`fixed inset-0 z-30 bg-black/60 backdrop-blur-sm transition-opacity duration-300 xl:hidden ${
+        className={`fixed inset-0 z-30 bg-black/80 transition-opacity duration-150 xl:hidden ${
           menu ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
       />
@@ -291,22 +304,19 @@ export default function Header() {
       <aside
         aria-label="Мобильное меню"
         aria-hidden={!menu}
-        className={`fixed top-0 right-0 z-40 flex h-full w-[85vw] max-w-sm flex-col gap-6 overflow-hidden border-l border-white/10 bg-[#0B0E14] p-6 transition-[transform,visibility] duration-300 xl:hidden ${
+        className={`fixed top-0 right-0 z-40 flex h-full w-[85vw] max-w-sm flex-col gap-6 overflow-hidden border-l-2 border-white/10 bg-[var(--bg)] p-6 transition-[transform,visibility] duration-150 xl:hidden ${
           menu ? "visible translate-x-0" : "invisible translate-x-full"
         }`}
       >
-        <div
-          className="pointer-events-none absolute -top-20 left-1/2 size-64 -translate-x-1/2 rounded-full bg-gold/10 blur-3xl"
-          aria-hidden="true"
-        />
-
-        <div className="relative flex shrink-0 items-center justify-between">
-          <span className="eyebrow">Навигация</span>
+        <div className="relative flex shrink-0 items-center justify-between border-b-2 border-white/10 pb-4">
+          <span className="inline-block border-2 border-[var(--accent)] bg-[var(--accent)] px-3 py-1 font-mono text-[11px] font-black uppercase tracking-widest text-[var(--bg)]">
+            [ Навигация ]
+          </span>
           <button
             type="button"
             aria-label="Закрыть меню"
             onClick={() => setMenu(false)}
-            className="grid size-11 place-items-center rounded-full border border-white/10 bg-white/[0.03] text-zinc-300 transition-colors duration-200 hover:bg-white/[0.08] hover:text-white"
+            className="grid size-11 place-items-center border-2 border-white/10 bg-[var(--panel)] text-[var(--text)] transition-colors duration-150 hover:border-[var(--accent)] hover:text-[var(--accent)]"
           >
             <XMarkIcon className="size-5" aria-hidden="true" />
           </button>
@@ -316,32 +326,41 @@ export default function Header() {
           aria-label="Главное меню"
           className="relative -mt-2 flex min-h-0 flex-1 flex-col overflow-y-auto"
         >
-          {nav.map(([href, text]) => (
-            <Link
-              key={href}
-              href={href}
-              onClick={() => setMenu(false)}
-              className={`flex min-h-14 items-center justify-between gap-3 border-b border-white/5 py-3 text-xl font-semibold transition-colors duration-200 ${
-                path.startsWith(href)
-                  ? "text-gold!"
-                  : "text-zinc-300! hover:text-white!"
-              }`}
-            >
-              <span className="flex items-center gap-3">
-                {path.startsWith(href) && (
-                  <span
-                    className="size-1.5 shrink-0 rounded-full bg-gold shadow-[0_0_8px_rgba(229,169,61,0.8)]"
+          {nav.map(([href, text]) => {
+            const isActive = path.startsWith(href);
+            return (
+              <Link
+                key={href}
+                href={href}
+                onClick={() => setMenu(false)}
+                className={
+                  isActive
+                    ? "flex min-h-14 items-center justify-between gap-3 border-b-2 border-white/10 py-3 font-mono text-[13px] font-black uppercase tracking-widest text-[var(--bg)]"
+                    : "flex min-h-14 items-center justify-between gap-3 border-b-2 border-white/10 py-3 font-mono text-[13px] font-black uppercase tracking-widest text-[var(--muted)] transition-colors duration-150 hover:text-[var(--text)]"
+                }
+              >
+                <span className="flex items-center gap-3">
+                  {isActive && (
+                    <span
+                      className="size-3 shrink-0 bg-[var(--accent)]"
+                      aria-hidden="true"
+                    />
+                  )}
+                  {text}
+                </span>
+                {isActive ? (
+                  <span className="inline-block border-2 border-[var(--bg)] bg-[var(--accent)] px-2 py-0.5 font-mono text-[10px] font-black uppercase tracking-widest text-[var(--bg)] shadow-[2px_2px_0px_0px_var(--text)]">
+                    Active
+                  </span>
+                ) : (
+                  <ChevronRightIcon
+                    className="size-4 shrink-0 text-[var(--subtle)]"
                     aria-hidden="true"
                   />
                 )}
-                {text}
-              </span>
-              <ChevronRightIcon
-                className="size-4 shrink-0 text-zinc-600"
-                aria-hidden="true"
-              />
-            </Link>
-          ))}
+              </Link>
+            );
+          })}
         </nav>
 
         <form
@@ -350,7 +369,7 @@ export default function Header() {
           className="group/mobile relative shrink-0"
         >
           <MagnifyingGlassIcon
-            className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-zinc-500 transition-colors duration-200 group-focus-within/mobile:text-gold"
+            className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-[var(--subtle)] transition-colors duration-150 group-focus-within/mobile:text-[var(--accent)]"
             aria-hidden="true"
           />
           <Input
@@ -359,42 +378,50 @@ export default function Header() {
             aria-label="Поиск по TMDB"
             minLength={2}
             required
-            className="min-h-12! rounded-xl! bg-white/[0.03]! pr-14! pl-11! focus:ring-0!"
+            className="min-h-12! border-2! border-white/10! bg-[var(--panel)]! pr-14! pl-11! focus:border-[var(--accent)]! focus:ring-0!"
           />
           <button
             type="submit"
             aria-label="Искать"
-            className="absolute top-1/2 right-1.5 grid size-9 -translate-y-1/2 place-items-center rounded-lg text-zinc-500 transition-colors duration-200 hover:bg-gold/10 hover:text-gold"
+            className="absolute top-1/2 right-1.5 grid size-9 -translate-y-1/2 place-items-center text-[var(--subtle)] transition-colors duration-150 hover:bg-[var(--accent)] hover:text-[var(--bg)]"
           >
             <MagnifyingGlassIcon className="size-4" aria-hidden="true" />
           </button>
         </form>
 
-        <div className="relative shrink-0">
+        <div className="relative shrink-0 border-t-2 border-white/10 pt-4">
           {!loading &&
             (user ? (
               <div className="flex flex-col gap-3">
                 <Link
                   href="/profile"
                   onClick={() => setMenu(false)}
-                  className="flex min-h-12 items-center gap-3 rounded-xl border border-white/5 bg-white/[0.02] px-3 text-zinc-200! transition-colors duration-200 hover:bg-white/[0.05]"
+                  className="flex min-h-12 items-center gap-3 border-2 border-white/10 bg-[var(--panel)] px-3 transition-colors duration-150 hover:border-[var(--accent)]"
                 >
-                  <span className="grid size-8 shrink-0 place-items-center rounded-full border border-gold/30 bg-gold/10 text-[11px] font-bold text-gold">
-                    {initials || (
-                      <UserCircleIcon className="size-5" aria-hidden="true" />
-                    )}
-                  </span>
-                  <span className="min-w-0 flex-1 truncate text-sm font-semibold">
+                  {user.avatar_url ? (
+                    <Artwork
+                      src={user.avatar_url}
+                      alt={user.name}
+                      className="size-8 shrink-0 border-2 border-[var(--accent)]"
+                    />
+                  ) : (
+                    <span className="grid size-8 shrink-0 place-items-center border-2 border-[var(--accent)] bg-[var(--accent)] font-mono text-[11px] font-black uppercase text-[var(--bg)]">
+                      {initials || (
+                        <UserCircleIcon className="size-5" aria-hidden="true" />
+                      )}
+                    </span>
+                  )}
+                  <span className="min-w-0 flex-1 truncate font-mono text-[11px] font-black uppercase tracking-widest text-[var(--text)]">
                     {user.name}
                   </span>
                   <ChevronRightIcon
-                    className="size-4 shrink-0 text-zinc-600"
+                    className="size-4 shrink-0 text-[var(--subtle)]"
                     aria-hidden="true"
                   />
                 </Link>
                 <Button
                   variant="ghost"
-                  className="min-h-12! w-full justify-start! gap-3! rounded-xl! border-white/5! px-3! text-sm! font-medium! text-red-400! enabled:hover:bg-red-500/10! enabled:hover:text-red-300!"
+                  className="min-h-12! w-full justify-start! gap-3! border-2! border-transparent! px-3! font-mono! text-[11px]! font-black! uppercase! tracking-widest! text-[var(--red)]! hover:border-[var(--red)]! hover:bg-[var(--red)]/10!"
                   onClick={() => {
                     setMenu(false);
                     void signOut();
@@ -411,7 +438,7 @@ export default function Header() {
               <Link
                 href="/login"
                 onClick={() => setMenu(false)}
-                className="button w-full"
+                className="inline-flex w-full items-center justify-center border-2 border-[var(--accent)] bg-[var(--accent)] px-5 py-3 font-mono text-[11px] font-black uppercase tracking-widest text-[var(--bg)] shadow-[4px_4px_0px_0px_var(--text)] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[6px_6px_0px_0px_var(--text)] active:translate-x-0 active:translate-y-0 active:shadow-none"
               >
                 Войти в аккаунт
               </Link>

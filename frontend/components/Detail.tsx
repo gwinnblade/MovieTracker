@@ -1,5 +1,4 @@
 "use client";
-
 import {
   ArrowLeftIcon,
   ArrowRightIcon,
@@ -34,22 +33,22 @@ import {
 import SeasonTracker from "./SeasonTracker";
 
 const metaBadge =
-  "inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-zinc-300";
+  "inline-flex items-center border-2 border-white/20 bg-white/5 px-2 py-0.5 font-mono text-[10px] font-black uppercase tracking-widest text-[var(--muted)]";
 
 const ratingBadge =
-  "inline-flex items-center gap-1.5 rounded-full border border-gold/30 bg-gold/10 px-3 py-1 text-xs font-semibold text-gold";
+  "inline-flex items-center gap-1 border-2 border-[var(--bg)] bg-[var(--accent)] px-2 py-0.5 font-mono text-[10px] font-black uppercase tracking-widest text-[var(--bg)] shadow-[2px_2px_0px_0px_var(--text)]";
 
 const approvedBadge =
-  "inline-flex items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-400";
+  "inline-flex items-center gap-1 border-2 border-[var(--bg)] bg-[var(--green)] px-2 py-0.5 font-mono text-[10px] font-black uppercase tracking-widest text-[var(--bg)]";
 
 const genreBadge =
-  "inline-flex items-center rounded-sm border border-gold/30 bg-gold/5 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.06em] text-gold";
+  "inline-flex items-center border-2 border-[var(--accent)] bg-transparent px-2 py-0.5 font-mono text-[10px] font-black uppercase tracking-widest text-[var(--accent)]";
 
-const sectionTitle =
-  "flex items-center gap-3 before:h-5 before:w-1 before:rounded-full before:bg-gold before:content-['']";
+const sectionStamp =
+  "inline-block border-2 border-[var(--accent)] bg-[var(--accent)] px-3 py-1 font-mono text-[11px] font-black uppercase tracking-widest text-[var(--bg)]";
 
 const quietLink =
-  "font-medium text-zinc-200! transition-colors duration-200 hover:text-gold!";
+  "font-mono text-[11px] font-black uppercase tracking-widest text-[var(--muted)] hover:text-[var(--accent)]";
 
 export default function Detail({ external = false }: { external?: boolean }) {
   const params = useParams<{
@@ -61,7 +60,6 @@ export default function Detail({ external = false }: { external?: boolean }) {
   const identity = external
     ? `${params.media_type}:${params.tmdb_id}`
     : params.id;
-
   return (
     <DetailContent
       key={identity}
@@ -87,28 +85,23 @@ function DetailContent({
   const cache = useQueryClient();
   const [saved, setSaved] = useState<Media | null>(null);
   const [picker, setPicker] = useState(false);
-
   const data = useQuery({
     queryKey: ["detail", external, type, id],
     queryFn: () =>
       external ? api.tmdbDetails(type || "movie", id) : api.media(id),
   });
-
   const media = data.data;
   const localId = saved?.id || media?.id;
-
   const tracking = useQuery({
     queryKey: ["tracking", userId, localId],
     queryFn: () => api.tracking(localId!),
     enabled: !!userId && !!localId,
   });
-
   const similar = useQuery({
     queryKey: ["similar", localId],
     queryFn: () => api.similar(localId!),
     enabled: !!localId && media?.moderation_status === "approved",
   });
-
   const ensureLocal = async (): Promise<Media> => {
     if (!media) throw new Error("Карточка ещё загружается.");
     if (localId) return { ...media, id: localId };
@@ -118,7 +111,6 @@ function DetailContent({
     setSaved(record);
     return record;
   };
-
   const invalidate = async () => {
     await Promise.all([
       cache.invalidateQueries({ queryKey: ["tracking"] }),
@@ -127,12 +119,9 @@ function DetailContent({
       cache.invalidateQueries({ queryKey: ["browse"] }),
     ]);
   };
-
   if (data.isPending) return <Loading text="Открываем историю…" />;
-
   if (data.error || !media)
     return <ErrorState error={data.error} retry={() => data.refetch()} />;
-
   const localPeople = media.persons || [];
   const directors = localPeople.filter((person) =>
     person.roles?.some((role) => role.code === "director"),
@@ -145,29 +134,21 @@ function DetailContent({
     media.moderation_status === "approved" && localId
       ? "/suggest?media_id=" + localId
       : `/suggest?tmdb_id=${media.tmdb_id || ""}&type=${media.tmdb_type || "movie"}`;
-
   return (
     <>
       <Link
         href={media.moderation_status === "approved" ? "/library" : "/catalog"}
-        className="group inline-flex items-center gap-2 text-sm font-semibold text-zinc-400! transition-colors duration-200 hover:text-gold!"
+        className="group inline-flex items-center gap-2 font-mono text-[11px] font-black uppercase tracking-widest text-[var(--muted)] hover:text-[var(--accent)]"
       >
-        <ArrowLeftIcon
-          className="ui-icon transition-transform duration-200 group-hover:-translate-x-0.5"
-          aria-hidden="true"
-        />{" "}
+        <ArrowLeftIcon className="ui-icon" aria-hidden="true" />
         Вернуться к кино
       </Link>
 
       <div className="detail-grid">
         <aside className="detail-poster">
           <div className="relative">
-            <div
-              className="pointer-events-none absolute -inset-3 rounded-3xl bg-gold/5 blur-2xl"
-              aria-hidden="true"
-            />
             <Artwork
-              className="relative rounded-xl!"
+              className="relative border-2 border-white/20 shadow-[12px_12px_0px_0px_var(--accent)]"
               src={media.poster_url || media.poster_key}
               alt={media.title_ru}
               priority
@@ -180,10 +161,7 @@ function DetailContent({
                 className="group w-full"
                 onClick={() => setPicker(true)}
               >
-                <PlusIcon
-                  className="ui-icon transition-transform duration-300 group-hover:rotate-90"
-                  aria-hidden="true"
-                />{" "}
+                <PlusIcon className="ui-icon" aria-hidden="true" />
                 В коллекцию
               </Button>
             ) : (
@@ -208,25 +186,27 @@ function DetailContent({
         </aside>
 
         <div className="detail-content">
-          <span className="eyebrow">
-            {isSeries ? "СЕРИАЛ" : media.type?.name_ru || "ФИЛЬМ"}
+          <span className="inline-block border-2 border-[var(--accent)] bg-[var(--accent)] px-3 py-1 font-mono text-[11px] font-black uppercase tracking-widest text-[var(--bg)]">
+            {isSeries ? "Сериал" : media.type?.name_ru || "Фильм"}
           </span>
-          <h1 className="text-4xl! font-bold! tracking-tight! text-white sm:text-5xl!">
+
+          <h1 className="mt-4 text-4xl font-black uppercase leading-[1.05] tracking-tighter text-[var(--text)] sm:text-5xl md:text-6xl">
             {media.title_ru}
           </h1>
+
           {media.title_en && media.title_en !== media.title_ru && (
-            <p className="original-title text-lg! text-zinc-500!">
+            <p className="mt-2 font-mono text-sm uppercase tracking-widest text-[var(--subtle)]">
               {media.title_en}
             </p>
           )}
 
-          <div className="detail-meta">
+          <div className="detail-meta mt-6 flex flex-wrap items-center gap-2">
             {media.release_date && (
               <span className={metaBadge}>{media.release_date.slice(0, 4)}</span>
             )}
             {!!media.vote_average && (
               <span className={ratingBadge}>
-                <StarIcon className="size-3.5" aria-hidden="true" /> TMDB{" "}
+                <StarIcon className="size-3" aria-hidden="true" /> TMDB{" "}
                 {media.vote_average.toFixed(1)}
               </span>
             )}
@@ -240,13 +220,13 @@ function DetailContent({
             )}
             {media.moderation_status === "approved" && (
               <span className={approvedBadge}>
-                <CheckBadgeIcon className="size-3.5" aria-hidden="true" /> В
-                каталоге сообщества
+                <CheckBadgeIcon className="size-3" aria-hidden="true" /> В
+                каталоге
               </span>
             )}
           </div>
 
-          <div className="genre-list">
+          <div className="genre-list mt-5 flex flex-wrap gap-2">
             {media.genres?.map((genre) => (
               <span className={genreBadge} key={genre.id || genre.name_ru}>
                 {genre.name_ru}
@@ -254,7 +234,7 @@ function DetailContent({
             ))}
           </div>
 
-          <p className="description text-zinc-300!">
+          <p className="description mt-8 max-w-3xl text-[var(--muted)] leading-relaxed">
             {media.description_ru || "Описание пока отсутствует."}
           </p>
 
@@ -271,12 +251,14 @@ function DetailContent({
             </div>
           )}
 
-          <div className="credit-row items-center">
+          <div className="credit-row mt-6 flex flex-wrap items-center gap-2 border-t-2 border-white/10 pt-4">
             <VideoCameraIcon
-              className="ui-icon size-4! text-gold/70"
+              className="size-4 text-[var(--accent)]"
               aria-hidden="true"
             />
-            <span>Режиссёр / создатель:</span>
+            <span className="font-mono text-[11px] uppercase tracking-widest text-[var(--subtle)]">
+              Режиссёр / создатель:
+            </span>
             {(directors.length
               ? directors
               : media.directors || (media.director ? [media.director] : [])
@@ -291,7 +273,7 @@ function DetailContent({
                 </Link>
               ) : (
                 <span
-                  className="text-zinc-300"
+                  className="font-mono text-[11px] uppercase tracking-widest text-[var(--muted)]"
                   key={person.tmdb_id || person.name}
                 >
                   {person.name}
@@ -301,13 +283,15 @@ function DetailContent({
           </div>
 
           {!!media.companies?.length && (
-            <div className="credit-row items-center">
+            <div className="credit-row flex flex-wrap items-center gap-2 border-t-2 border-white/10 pt-4">
               <BuildingOffice2Icon
-                className="ui-icon size-4! text-zinc-500"
+                className="size-4 text-[var(--subtle)]"
                 aria-hidden="true"
               />
-              <span>Производство:</span>
-              <span className="text-zinc-300">
+              <span className="font-mono text-[11px] uppercase tracking-widest text-[var(--subtle)]">
+                Производство:
+              </span>
+              <span className="font-mono text-[11px] uppercase tracking-widest text-[var(--muted)]">
                 {media.companies.map((company) => company.name).join(", ")}
               </span>
             </div>
@@ -331,8 +315,10 @@ function DetailContent({
             ))}
 
           {!!(cast.length || media.cast?.length) && (
-            <section className="section">
-              <h2 className={sectionTitle}>В ролях</h2>
+            <section className="section mt-10">
+              <div className="mb-6 flex items-center gap-3 border-b-2 border-white/10 pb-4">
+                <span className={sectionStamp}>В ролях</span>
+              </div>
               <div className="people-grid">
                 {(cast.length ? cast : media.cast || []).map((person) => (
                   <PersonCard
@@ -355,12 +341,15 @@ function DetailContent({
           )}
 
           {!!similar.data?.movies.length && (
-            <section className="section">
-              <div className="section-heading">
-                <h2 className={sectionTitle}>Ещё у этого режиссёра</h2>
+            <section className="section mt-10">
+              <div className="section-heading mb-6 border-b-2 border-white/10 pb-4">
+                <span className={sectionStamp}>Ещё у этого режиссёра</span>
                 {similar.data.director?.id && (
-                  <Link href={"/persons/" + similar.data.director.id}>
-                    Фильмография{" "}
+                  <Link
+                    href={"/persons/" + similar.data.director.id}
+                    className="group inline-flex items-center gap-2 font-mono text-[11px] font-black uppercase tracking-widest text-[var(--muted)] hover:text-[var(--accent)]"
+                  >
+                    Фильмография
                     <ArrowRightIcon className="ui-icon" aria-hidden="true" />
                   </Link>
                 )}
@@ -383,24 +372,22 @@ function DetailContent({
 
 function PersonCard({ person }: { person: Person }) {
   const cardClass =
-    "person-card group rounded-xl border border-white/5 bg-white/[0.02] p-2 transition-all duration-300 hover:-translate-y-0.5 hover:border-gold/50 hover:bg-white/[0.04] hover:shadow-[0_0_15px_rgba(229,169,61,0.2)]";
-
+    "person-card group border-2 border-white/10 bg-[var(--panel)] p-2 transition-all duration-150 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:border-[var(--accent)] hover:shadow-[6px_6px_0px_0px_var(--accent)]";
   const content = (
     <>
       <Artwork
-        className="rounded-lg!"
+        className="border-0"
         src={person.photo_url}
         alt={person.name}
       />
-      <p className="line-clamp-2 text-sm! font-semibold text-white">
+      <p className="mt-2 line-clamp-2 font-black uppercase tracking-tight text-[var(--text)] text-sm">
         {person.name}
       </p>
-      <small className="truncate text-xs! text-zinc-500!">
+      <small className="truncate font-mono text-[10px] uppercase tracking-widest text-[var(--subtle)]">
         {person.pivot?.character || person.character}
       </small>
     </>
   );
-
   return person.id ? (
     <Link className={cardClass} href={"/persons/" + person.id}>
       {content}
@@ -420,12 +407,10 @@ function EntryEditor({
   onSaved: () => Promise<void>;
 }) {
   const [busy, setBusy] = useState(false);
-
   const statuses = useQuery({
     queryKey: ["statuses"],
     queryFn: () => api.references("statuses"),
   });
-
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
@@ -447,22 +432,23 @@ function EntryEditor({
       setBusy(false);
     }
   };
-
   return (
-    <section className="relative mt-7 overflow-hidden rounded-2xl border border-white/5 bg-[#151921]/80 p-6 shadow-[0_18px_50px_rgba(0,0,0,0.35)] backdrop-blur-md">
+    <section className="relative mt-8 border-2 border-white/10 bg-[var(--panel)] p-6 shadow-[8px_8px_0px_0px_var(--accent)] sm:p-8">
+      {/* Solid accent rule — ticket stub edge */}
       <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent"
+        className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-[var(--accent)]"
         aria-hidden="true"
       />
-      <h2 className="mb-5! text-xl! font-bold! tracking-tight! text-gold">
+      <span className="inline-block border-2 border-[var(--accent)] bg-[var(--accent)] px-3 py-1 font-mono text-[11px] font-black uppercase tracking-widest text-[var(--bg)]">
         {entry ? "Твоя запись" : "Добавить в мой список"}
-      </h2>
+      </span>
+
       {statuses.isPending ? (
         <Loading />
       ) : statuses.error ? (
         <ErrorState error={statuses.error} />
       ) : (
-        <form onSubmit={submit} className="form-stack">
+        <form onSubmit={submit} className="form-stack mt-6">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <Field label="Статус просмотра">
               <Select
@@ -518,13 +504,10 @@ function EntryEditor({
             {entry && (
               <Link
                 href="/entries"
-                className="group inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-400! transition-colors duration-200 hover:text-gold!"
+                className="group inline-flex items-center gap-2 font-mono text-[11px] font-black uppercase tracking-widest text-[var(--muted)] hover:text-[var(--accent)]"
               >
-                Перейти к моему списку{" "}
-                <ArrowRightIcon
-                  className="ui-icon transition-transform duration-200 group-hover:translate-x-0.5"
-                  aria-hidden="true"
-                />
+                Перейти к моему списку
+                <ArrowRightIcon className="ui-icon" aria-hidden="true" />
               </Link>
             )}
           </div>
@@ -544,12 +527,10 @@ function CollectionPicker({
   const { user } = useAuth();
   const cache = useQueryClient();
   const [busy, setBusy] = useState(false);
-
   const lists = useQuery({
     queryKey: ["collections", user?.id],
     queryFn: api.collections,
   });
-
   return (
     <Modal title="Добавить в коллекцию" onClose={onClose}>
       {lists.isPending ? (
@@ -581,7 +562,9 @@ function CollectionPicker({
               }}
             >
               <span className="truncate">{list.name}</span>
-              <small className="shrink-0">{list.media_count} записей</small>
+              <small className="shrink-0 font-mono text-[10px] uppercase tracking-widest">
+                {list.media_count} записей
+              </small>
             </Button>
           ))}
         </div>

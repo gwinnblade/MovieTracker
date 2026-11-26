@@ -60,7 +60,7 @@ export default function Moderation() {
   return (
     <RequireAuth>
       <PageHeading
-        eyebrow={isModerator ? "КАТАЛОГ СООБЩЕСТВА" : "ТВОЙ ВКЛАД В КАТАЛОГ"}
+        eyebrow={isModerator ? "[ КАТАЛОГ СООБЩЕСТВА ]" : "[ ТВОЙ ВКЛАД В КАТАЛОГ ]"}
         title={isModerator ? "Модерация" : "Мои заявки"}
         description={
           isModerator
@@ -73,7 +73,7 @@ export default function Moderation() {
         </Link>
       </PageHeading>
 
-      <div className="mb-8 inline-flex w-full flex-wrap gap-1 overflow-x-auto rounded-xl border border-white/5 bg-[#151921]/80 p-1 backdrop-blur-md [&::-webkit-scrollbar]:hidden sm:w-auto">
+      <div className="mb-8 inline-flex w-full flex-wrap gap-0 border-2 border-white/10 bg-[var(--panel)] sm:w-auto">
         {[
           { value: "", title: "Все заявки", Icon: Squares2X2Icon },
           { value: "pending", title: "Ожидают", Icon: ClockIcon },
@@ -82,10 +82,10 @@ export default function Moderation() {
         ].map(({ value, title, Icon }) => (
           <button
             key={value}
-            className={`inline-flex items-center gap-2 whitespace-nowrap rounded-lg border px-4 py-2 text-sm font-medium transition-all duration-300 ${
+            className={`inline-flex items-center gap-2 whitespace-nowrap border-r-2 border-white/10 px-5 py-3 font-mono text-[11px] font-black uppercase tracking-widest transition-[background-color,color] duration-150 last:border-r-0 ${
               filter === value
-                ? "border-gold/20 bg-gold/10 text-gold"
-                : "border-transparent text-zinc-400 hover:bg-white/[0.03] hover:text-white"
+                ? "border-r-2 border-white/10 bg-[var(--accent)] text-[var(--bg)] shadow-[3px_3px_0px_0px_var(--text)]"
+                : "border-r-2 border-white/10 bg-transparent text-[var(--muted)] hover:bg-white/5 hover:text-[var(--text)]"
             }`}
             onClick={() => setFilter(value)}
           >
@@ -103,34 +103,34 @@ export default function Moderation() {
         <div className="flex flex-col gap-5">
           {items.map((item) => (
             <article
-              className="rounded-2xl border border-white/5 bg-[#151921] p-6 transition-all duration-300 hover:border-gold/20 hover:shadow-[0_0_30px_rgba(229,169,61,0.08)]"
+              className="border-2 border-white/10 bg-[var(--panel)] p-6 shadow-[8px_8px_0px_0px_rgba(255,255,255,0.05)] transition-all duration-150 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:border-[var(--accent)] hover:shadow-[10px_10px_0px_0px_var(--accent)]"
               key={item.id}
             >
               <div className="flex flex-col gap-5 sm:flex-row">
                 {item.poster_key && (
                   <Artwork
-                    className="w-[110px] shrink-0 rounded-xl border border-white/10 shadow-[0_10px_30px_rgba(0,0,0,0.5)]"
+                    className="w-[110px] shrink-0 border-2 border-white/20 shadow-[6px_6px_0px_0px_var(--accent)]"
                     src={item.poster_key}
                     alt={item.title_ru}
                   />
                 )}
                 <div className="min-w-0 flex-1">
                   <span
-                    className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium ${
+                    className={`inline-flex items-center gap-1.5 border-2 px-3 py-1 font-mono text-[10px] font-black uppercase tracking-widest ${
                       item.status === "approved"
-                        ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
+                        ? "border-[var(--bg)] bg-[var(--green)] text-[var(--bg)]"
                         : item.status === "rejected"
-                          ? "border-red-500/20 bg-red-500/10 text-red-400"
-                          : "border-amber-500/20 bg-amber-500/10 text-amber-400"
+                          ? "border-[var(--bg)] bg-[var(--red)] text-[var(--bg)]"
+                          : "border-[var(--bg)] bg-[var(--accent)] text-[var(--bg)]"
                     }`}
                   >
-                    <span className="size-1.5 rounded-full bg-current" />
+                    <span className="size-1.5 bg-current" aria-hidden="true" />
                     {statuses[item.status]}
                   </span>
-                  <h2 className="mt-3 text-2xl font-bold tracking-tight text-white">
+                  <h2 className="mt-3 text-2xl font-black uppercase tracking-tight text-[var(--text)]">
                     {item.title_ru}
                   </h2>
-                  <p className="mt-1 flex flex-wrap items-center gap-2 text-xs text-zinc-500">
+                  <p className="mt-1 flex flex-wrap items-center gap-2 font-mono text-[11px] uppercase tracking-widest text-[var(--subtle)]">
                     <span>#{item.id}</span>
                     <span>
                       ·{" "}
@@ -149,13 +149,13 @@ export default function Moderation() {
                       <span>· Автор: {item.user.name}</span>
                     )}
                   </p>
-                  <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-zinc-400">
+                  <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-[var(--muted)]">
                     {item.description_ru}
                   </p>
                   <div className="mt-4 flex flex-wrap gap-2">
                     {item.genres?.map((genre) => (
                       <span
-                        className="inline-flex items-center rounded-sm border border-gold/20 bg-gold/5 px-2.5 py-1 text-xs font-medium text-gold/90"
+                        className="inline-flex items-center border-2 border-[var(--accent)] bg-[var(--accent)] px-2.5 py-1 font-mono text-[10px] font-black uppercase tracking-widest text-[var(--bg)]"
                         key={genre.id}
                       >
                         {genre.name_ru}
@@ -166,8 +166,8 @@ export default function Moderation() {
               </div>
 
               {item.status === "rejected" && (
-                <div className="mt-4 rounded-xl border border-red-500/20 bg-red-500/[0.03] p-4 text-sm text-red-300">
-                  <span className="font-semibold">Причина: </span>
+                <div className="mt-4 border-2 border-[var(--red)] bg-[var(--red)]/10 p-4 text-sm text-[var(--red)] shadow-[4px_4px_0px_0px_var(--red)]">
+                  <span className="font-black uppercase tracking-wider">Причина: </span>
                   {item.rejection_reason}
                 </div>
               )}

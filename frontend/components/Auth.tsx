@@ -1,5 +1,4 @@
 "use client";
-
 import {
   createContext,
   useContext,
@@ -10,7 +9,7 @@ import {
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { useQueryClient } from "@tanstack/react-query";
-import { FilmIcon } from "@heroicons/react/24/outline";
+import { ArrowRightIcon, FilmIcon } from "@heroicons/react/24/outline";
 import { api } from "@/lib/api";
 import type { User } from "@/lib/types";
 import { Loading } from "./UI";
@@ -74,37 +73,39 @@ export function RequireAuth({ children }: { children: ReactNode }) {
 
   if (!user)
     return (
-      <div className="relative mx-auto mt-20 max-w-2xl overflow-hidden rounded-3xl border border-white/5 bg-[#151921] p-12 text-center shadow-[0_0_80px_rgba(229,169,61,0.06),0_30px_80px_rgba(0,0,0,0.5)]">
-        <div
-          className="pointer-events-none absolute -top-28 left-1/2 h-64 w-96 -translate-x-1/2 rounded-full bg-gold/10 blur-3xl"
-          aria-hidden="true"
-        />
-        <div
-          className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold/60 to-transparent"
-          aria-hidden="true"
-        />
-        <div className="relative">
-          <span className="mx-auto mb-7 grid size-14 place-items-center rounded-2xl border border-gold/20 bg-gold/10 text-gold shadow-[0_0_30px_rgba(229,169,61,0.18)]">
-            <FilmIcon className="size-6" aria-hidden="true" />
+      <div className="relative mx-auto mt-20 max-w-2xl border-2 border-white/20 bg-[var(--panel)] p-12 text-center shadow-[12px_12px_0px_0px_var(--accent)]">
+        <div className="absolute -top-4 left-1/2 -translate-x-1/2 border-2 border-[var(--bg)] bg-[var(--accent)] px-4 py-1 font-mono text-xs font-bold uppercase tracking-widest text-[var(--bg)]">
+          [ Доступ ограничен ]
+        </div>
+        
+        <div className="relative flex flex-col items-center">
+          <span className="mb-8 inline-flex size-16 items-center justify-center border-2 border-[var(--bg)] bg-[var(--accent)] text-[var(--bg)] shadow-[6px_6px_0px_0px_var(--text)]">
+            <FilmIcon className="size-8" aria-hidden="true" />
           </span>
-          <span className="eyebrow">ТВОЯ БИБЛИОТЕКА</span>
-          <div className="mt-3">
-            <h1>Всё любимое — в одном месте</h1>
-          </div>
-          <div className="mx-auto mt-4 max-w-md">
-            <p className="text-sm leading-relaxed text-zinc-400">
-              Войди, чтобы вести список просмотров, собирать коллекции и
-              отправлять заявки.
-            </p>
-          </div>
-          <div className="mx-auto mt-9 flex w-full max-w-xs flex-col gap-3">
+          
+          <h1 className="text-4xl font-black uppercase leading-tight tracking-tighter text-[var(--text)] sm:text-5xl">
+            Всё любимое <br />
+            <span className="inline-block bg-[var(--accent)] px-3 text-[var(--bg)]">
+              в одном месте
+            </span>
+          </h1>
+          
+          <p className="mx-auto mt-6 max-w-md text-base leading-relaxed text-[var(--muted)]">
+            Войди, чтобы вести список просмотров, собирать коллекции и отправлять заявки. Никаких алгоритмов — только твой личный дневник кино.
+          </p>
+          
+          <div className="mt-10 flex w-full max-w-sm flex-col gap-4">
             <Link
               href={"/login?next=" + encodeURIComponent(path)}
-              className="button primary w-full"
+              className="group inline-flex items-center justify-center gap-3 border-2 border-[var(--accent)] bg-[var(--accent)] px-6 py-4 text-sm font-bold uppercase tracking-wider text-[var(--bg)] shadow-[6px_6px_0px_0px_var(--text)] transition-all hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[8px_8px_0px_0px_var(--text)] active:translate-x-0 active:translate-y-0 active:shadow-none"
             >
               Войти в аккаунт
+              <ArrowRightIcon className="h-5 w-5 transition-transform group-hover:translate-x-1" />
             </Link>
-            <Link href="/register" className="button secondary w-full">
+            <Link
+              href="/register"
+              className="inline-flex items-center justify-center gap-3 border-2 border-white/20 bg-transparent px-6 py-4 text-sm font-bold uppercase tracking-wider text-[var(--text)] shadow-[6px_6px_0px_0px_rgba(255,255,255,0.1)] transition-all hover:translate-x-[-2px] hover:translate-y-[-2px] hover:border-white/40 hover:shadow-[8px_8px_0px_0px_rgba(255,255,255,0.15)] active:translate-x-0 active:translate-y-0 active:shadow-none"
+            >
               Создать аккаунт
             </Link>
           </div>

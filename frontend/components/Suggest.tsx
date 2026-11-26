@@ -52,7 +52,7 @@ export default function Suggest() {
   return (
     <RequireAuth>
       <PageHeading
-        eyebrow="ПОПОЛНИМ КАТАЛОГ ВМЕСТЕ"
+        eyebrow="[ ПОПОЛНИМ КАТАЛОГ ВМЕСТЕ ]"
         title={mediaId ? "Предложить исправление" : "Предложить фильм"}
         description="Выбери фильм или сериал в TMDB либо заполни карточку самостоятельно. Модератор проверит заявку перед публикацией."
       />
@@ -141,21 +141,26 @@ function SuggestEditor({
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start">
-      <div className="rounded-2xl border border-white/5 bg-[#151921] p-6 sm:p-8">
+      <div className="relative border-2 border-white/10 bg-[var(--panel)] p-6 shadow-[8px_8px_0px_0px_var(--accent)] sm:p-8">
+        {/* Solid accent rule — ticket stub edge */}
+        <div
+          className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-[var(--accent)]"
+          aria-hidden="true"
+        />
+
         {!editId && (
           <section className="form-stack">
-            <h2 className="flex items-center gap-2 text-xl! font-bold! tracking-tight! text-white">
-              <MagnifyingGlassIcon
-                className="size-5 text-gold"
-                aria-hidden="true"
-              />
+            <h2 className="flex items-center gap-3 border-b-2 border-white/10 pb-4 text-xl font-black uppercase tracking-tight text-[var(--text)]">
+              <span className="inline-block border-2 border-[var(--accent)] bg-[var(--accent)] px-2 py-0.5 font-mono text-[10px] font-black uppercase tracking-widest text-[var(--bg)]">
+                01
+              </span>
               Найти в TMDB
             </h2>
             <div className="form-row">
               <Field label="Название">
                 <div className="relative">
                   <MagnifyingGlassIcon
-                    className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-zinc-500"
+                    className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-[var(--subtle)]"
                     aria-hidden="true"
                   />
                   <Input
@@ -186,25 +191,25 @@ function SuggestEditor({
                 ) : search.error ? (
                   <ErrorState error={search.error} />
                 ) : (
-                  <div className="max-h-[420px] space-y-2 overflow-y-auto pr-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/10 hover:[&::-webkit-scrollbar-thumb]:bg-gold/40 [scrollbar-width:thin]">
+                  <div className="max-h-[420px] space-y-2 overflow-y-auto pr-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-white/10 hover:[&::-webkit-scrollbar-thumb]:bg-[var(--accent)] [scrollbar-width:thin]">
                     {search.data?.data.slice(0, 8).map((media) => (
                       <button
                         type="button"
                         disabled={selecting}
                         key={`${media.tmdb_type}-${media.tmdb_id}`}
                         onClick={() => void select(media)}
-                        className="group flex w-full items-center gap-3 rounded-xl border border-white/5 bg-[#0B0E14] p-2.5 text-left transition-all duration-200 hover:border-gold/30 hover:bg-gold/[0.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/40"
+                        className="group flex w-full items-center gap-3 border-2 border-white/10 bg-[var(--bg)] p-2.5 text-left transition-[transform,box-shadow,border-color] duration-150 ease-out hover:-translate-x-0.5 hover:-translate-y-0.5 hover:border-[var(--accent)] hover:shadow-[4px_4px_0px_0px_var(--accent)] focus-visible:outline-2 focus-visible:outline-[var(--accent)] focus-visible:outline-offset-2"
                       >
                         <Artwork
                           src={media.poster_url}
                           alt={media.title_ru}
-                          className="w-12 shrink-0 rounded-md"
+                          className="w-12 shrink-0 border-2 border-white/20"
                         />
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-medium text-white transition-colors group-hover:text-gold">
+                          <p className="truncate font-black uppercase tracking-tight text-[var(--text)] transition-colors duration-150 group-hover:text-[var(--accent)]">
                             {media.title_ru}
                           </p>
-                          <p className="mt-0.5! text-xs text-zinc-500">
+                          <p className="mt-0.5 font-mono text-[10px] uppercase tracking-widest text-[var(--subtle)]">
                             {media.release_date?.slice(0, 4)} ·{" "}
                             {media.tmdb_type === "tv" ? "Сериал" : "Фильм"}
                           </p>
@@ -216,12 +221,12 @@ function SuggestEditor({
               </>
             )}
             {selected && (
-              <div className="mt-2 flex items-center justify-between gap-3 rounded-xl border border-emerald-500/20 bg-emerald-500/[0.05] px-4 py-3">
-                <div className="flex items-center gap-2 text-sm text-emerald-300">
+              <div className="mt-2 flex items-center justify-between gap-3 border-2 border-[var(--bg)] bg-[var(--green)] px-4 py-3">
+                <div className="flex items-center gap-2 text-sm font-black uppercase tracking-wider text-[var(--bg)]">
                   <CheckIcon className="size-4 shrink-0" aria-hidden="true" />
                   <span>
                     TMDB:{" "}
-                    <span className="font-medium text-emerald-200">
+                    <span className="font-black">
                       {selected.title_ru}
                     </span>
                   </span>
@@ -229,7 +234,7 @@ function SuggestEditor({
                 <button
                   type="button"
                   onClick={() => setSelected(undefined)}
-                  className="inline-flex shrink-0 items-center gap-1 text-xs text-zinc-400 transition-colors hover:text-white"
+                  className="inline-flex shrink-0 items-center gap-1 font-mono text-[10px] font-black uppercase tracking-widest text-[var(--bg)] transition-colors duration-150 hover:text-[var(--bg)]/70"
                 >
                   <XMarkIcon className="size-3.5" aria-hidden="true" />
                   Вручную
@@ -246,8 +251,10 @@ function SuggestEditor({
         >
           {types.error && <ErrorState error={types.error} />}
           {genres.error && <ErrorState error={genres.error} />}
-          <h2 className="flex items-center gap-2 text-xl! font-bold! tracking-tight! text-white">
-            <FilmIcon className="size-5 text-gold" aria-hidden="true" />
+          <h2 className="flex items-center gap-3 border-b-2 border-white/10 pb-4 text-xl font-black uppercase tracking-tight text-[var(--text)]">
+            <span className="inline-block border-2 border-[var(--accent)] bg-[var(--accent)] px-2 py-0.5 font-mono text-[10px] font-black uppercase tracking-widest text-[var(--bg)]">
+              02
+            </span>
             Карточка для каталога
           </h2>
           <Field label="Русское название">
@@ -312,16 +319,16 @@ function SuggestEditor({
 
           <div className="field">
             <span>Постер</span>
-            <label className="group flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-white/10 bg-[#0B0E14] px-6 py-8 text-center transition-all duration-200 hover:border-gold/40 hover:bg-gold/[0.02] focus-within:border-gold/40 focus-within:ring-2 focus-within:ring-gold/20">
+            <label className="group flex cursor-pointer flex-col items-center justify-center gap-2 border-2 border-dashed border-white/20 bg-[var(--bg)] px-6 py-8 text-center transition-[border-color,box-shadow] duration-150 ease-out hover:border-[var(--accent)] hover:shadow-[6px_6px_0px_0px_var(--accent)] focus-within:border-[var(--accent)] focus-within:shadow-[6px_6px_0px_0px_var(--accent)]">
               <FilmIcon
-                className="size-8 text-zinc-600 transition-colors group-hover:text-gold"
+                className="size-8 text-[var(--subtle)] transition-colors duration-150 group-hover:text-[var(--accent)]"
                 aria-hidden="true"
               />
-              <span className="text-sm text-zinc-400">
-                <span className="font-medium text-white">Нажми</span> или
+              <span className="text-sm text-[var(--muted)]">
+                <span className="font-black uppercase tracking-wider text-[var(--text)]">Нажми</span> или
                 перетащи файл сюда
               </span>
-              <span className="text-xs text-zinc-600">
+              <span className="font-mono text-[10px] uppercase tracking-widest text-[var(--subtle)]">
                 JPEG, PNG или WebP, до 5 МБ
               </span>
               <input
@@ -339,7 +346,7 @@ function SuggestEditor({
           </div>
 
           <div className="space-y-2">
-            <span className="text-sm font-medium text-zinc-300">Жанры</span>
+            <span className="font-mono text-[11px] font-black uppercase tracking-widest text-[var(--muted)]">Жанры</span>
             <div className="flex flex-wrap gap-2">
               {genres.data?.map((genre) => (
                 <label
@@ -360,7 +367,7 @@ function SuggestEditor({
                     }
                     className="peer ui-control sr-only"
                   />
-                  <span className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs font-medium text-zinc-400 transition-all duration-200 hover:border-white/20 hover:text-white peer-checked:border-gold/40 peer-checked:bg-gold/10 peer-checked:text-gold peer-focus-visible:ring-2 peer-focus-visible:ring-gold/40">
+                  <span className="inline-flex items-center border-2 border-white/20 bg-white/5 px-3 py-1.5 font-mono text-[10px] font-black uppercase tracking-widest text-[var(--muted)] transition-[background-color,border-color,color] duration-150 ease-out hover:border-white/40 hover:text-[var(--text)] peer-checked:border-[var(--bg)] peer-checked:bg-[var(--accent)] peer-checked:text-[var(--bg)] peer-focus-visible:outline-2 peer-focus-visible:outline-[var(--accent)] peer-focus-visible:outline-offset-2">
                     {genre.name_ru}
                   </span>
                 </label>
@@ -379,27 +386,34 @@ function SuggestEditor({
         </form>
       </div>
 
-      <aside className="sticky top-24 rounded-2xl border border-white/5 bg-gradient-to-br from-[#151921] to-[#0B0E14] p-6">
-        <span className="eyebrow">ПОСЛЕ ПРОВЕРКИ</span>
+      <aside className="sticky top-24 border-2 border-white/10 bg-[var(--panel)] p-6 shadow-[6px_6px_0px_0px_var(--accent)]">
+        {/* Solid accent rule — ticket stub edge */}
+        <div
+          className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-[var(--accent)]"
+          aria-hidden="true"
+        />
+        <span className="inline-block border-2 border-[var(--accent)] bg-[var(--accent)] px-3 py-1 font-mono text-[11px] font-black uppercase tracking-widest text-[var(--bg)]">
+          [ После проверки ]
+        </span>
         {selected ? (
           <>
             <Artwork
               src={selected.poster_url || selected.poster_key}
               alt={selected.title_ru}
-              className="mx-auto mt-5 w-full max-w-[220px] rounded-xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)]"
+              className="mx-auto mt-5 w-full max-w-[220px] border-2 border-white/20 shadow-[10px_10px_0px_0px_var(--accent)]"
             />
-            <h3 className="mt-4! text-lg! font-bold! leading-tight! tracking-tight! text-white">
+            <h3 className="mt-4 text-lg font-black uppercase leading-tight tracking-tight text-[var(--text)]">
               {selected.title_ru}
             </h3>
             {selected.director && (
-              <p className="mt-2! text-xs text-zinc-500">
-                <span className="text-zinc-400">Режиссёр:</span>{" "}
+              <p className="mt-2 font-mono text-[10px] uppercase tracking-widest text-[var(--subtle)]">
+                <span className="text-[var(--muted)]">Режиссёр:</span>{" "}
                 {selected.director.name}
               </p>
             )}
             {!!selected.cast?.length && (
-              <p className="mt-2! text-xs text-zinc-500">
-                <span className="text-zinc-400">В ролях:</span>{" "}
+              <p className="mt-2 font-mono text-[10px] uppercase tracking-widest text-[var(--subtle)]">
+                <span className="text-[var(--muted)]">В ролях:</span>{" "}
                 {selected.cast
                   .slice(0, 5)
                   .map((person) => person.name)
@@ -408,30 +422,30 @@ function SuggestEditor({
             )}
           </>
         ) : (
-          <div className="mt-5 flex flex-col items-center gap-3 rounded-xl border border-dashed border-white/10 bg-white/[0.02] px-4 py-8 text-center">
-            <FilmIcon className="size-8 text-zinc-600" aria-hidden="true" />
-            <p className="text-xs leading-relaxed text-zinc-500">
+          <div className="mt-5 flex flex-col items-center gap-3 border-2 border-dashed border-white/20 bg-[var(--bg)] px-4 py-8 text-center">
+            <FilmIcon className="size-8 text-[var(--subtle)]" aria-hidden="true" />
+            <p className="font-mono text-[10px] uppercase tracking-widest leading-relaxed text-[var(--subtle)]">
               Выбери фильм в TMDB или заполни карточку вручную — здесь появится
               превью.
             </p>
           </div>
         )}
-        <div className="mt-5 space-y-3 border-t border-white/5 pt-5 text-xs leading-relaxed text-zinc-500">
+        <div className="mt-5 space-y-3 border-t-2 border-white/10 pt-5 font-mono text-[10px] uppercase tracking-widest leading-relaxed text-[var(--subtle)]">
           <p>
             Заявка сначала появится в разделе «Мои заявки». После одобрения
             карточка попадёт в общий каталог.
           </p>
-          <p className="mt-3!">
+          <p className="mt-3">
             Статус и причина отклонения всегда доступны автору.
           </p>
         </div>
         <Link
           href="/moderation"
-          className="group mt-5 inline-flex items-center gap-2 text-sm font-medium text-gold transition-colors hover:text-gold-hover"
+          className="group mt-5 inline-flex items-center gap-2 font-mono text-[11px] font-black uppercase tracking-widest text-[var(--accent)] transition-colors duration-150 hover:text-[var(--accent-hover)]"
         >
           Посмотреть заявки{" "}
           <ArrowRightIcon
-            className="size-4 transition-transform duration-200 group-hover:translate-x-0.5"
+            className="size-4 transition-transform duration-150 group-hover:translate-x-1"
             aria-hidden="true"
           />
         </Link>

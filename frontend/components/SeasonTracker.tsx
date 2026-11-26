@@ -24,6 +24,15 @@ import {
   Textarea,
 } from "./UI";
 
+const stampClasses =
+  "inline-block border-2 border-[var(--accent)] bg-[var(--accent)] px-3 py-1 font-mono text-[11px] font-black uppercase tracking-widest text-[var(--bg)]";
+
+const barTrackClasses =
+  "h-3 w-full overflow-hidden border-2 border-white/15 bg-[var(--bg)] sm:col-span-3";
+
+const barFillClasses =
+  "block h-full bg-[var(--accent)] transition-[width] duration-150 ease-out";
+
 export default function SeasonTracker({
   media,
   tracking,
@@ -63,7 +72,9 @@ export default function SeasonTracker({
   const progress = tracking?.seasons.find((item) => item.season === selected);
   return (
     <section className="section">
-      <h2>Сезоны и серии</h2>
+      <div className="mb-6 flex items-center gap-3 border-b-2 border-white/10 pb-4">
+        <span className={stampClasses}>Сезоны и серии</span>
+      </div>
       {!seasons.length ? (
         <Empty title="Список серий пока не заполнен" />
       ) : (
@@ -169,17 +180,25 @@ function SeasonPanel({
     <>
       {userId ? (
         <form
-          className="mb-6 grid items-end gap-4 rounded-2xl border border-white/5 bg-[#151921]/80 p-5 shadow-[0_0_30px_rgba(229,169,61,0.04)] backdrop-blur-md sm:grid-cols-[8rem_minmax(0,1fr)_auto] sm:p-6"
+          className="relative mb-6 grid items-end gap-4 border-2 border-white/10 bg-[var(--panel)] p-5 shadow-[8px_8px_0px_0px_var(--accent)] sm:grid-cols-[8rem_minmax(0,1fr)_auto] sm:p-6"
           onSubmit={(event: FormEvent<HTMLFormElement>) => {
             event.preventDefault();
             const form = new FormData(event.currentTarget);
             const nextStatus = String(form.get("status"));
             void saveProgress(
               Number(form.get("watched")),
-              nextStatus === status && ["planned", "watching", "completed"].includes(status) ? undefined : nextStatus,
+              nextStatus === status &&
+                ["planned", "watching", "completed"].includes(status)
+                ? undefined
+                : nextStatus,
             );
           }}
         >
+          {/* Solid accent rule — ticket stub edge */}
+          <div
+            className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-[var(--accent)]"
+            aria-hidden="true"
+          />
           <Field label={`Просмотрено из ${count}`}>
             <Input
               name="watched"
@@ -216,7 +235,7 @@ function SeasonPanel({
             прогресс
           </Button>
           <div
-            className="mt-4 h-2 w-full overflow-hidden rounded-full bg-white/[0.04] sm:col-span-3"
+            className={barTrackClasses}
             role="progressbar"
             aria-label="Прогресс сезона"
             aria-valuenow={Math.min(watched, count)}
@@ -224,7 +243,7 @@ function SeasonPanel({
             aria-valuemax={count}
           >
             <span
-              className="block h-full rounded-full bg-gradient-to-r from-gold/60 to-gold shadow-[0_0_8px_rgba(229,169,61,0.4)] transition-[width] duration-300"
+              className={barFillClasses}
               style={{
                 width: `${count ? Math.min(100, (watched / count) * 100) : 0}%`,
               }}
@@ -232,14 +251,16 @@ function SeasonPanel({
           </div>
         </form>
       ) : (
-        <div className="rounded-xl border border-gold/20 bg-gold/5 p-4 text-sm text-zinc-300">
+        <div className="border-2 border-[var(--accent)] bg-[var(--accent)]/10 p-4 text-sm text-[var(--text)] shadow-[4px_4px_0px_0px_var(--accent)]">
           <Link
             href="/login"
-            className="font-medium text-gold hover:underline"
+            className="font-black uppercase tracking-wider text-[var(--accent)] hover:underline"
           >
             Войди
-          </Link>
-          , чтобы отмечать серии и сохранять заметки.
+          </Link>{" "}
+          <span className="text-[var(--muted)]">
+            , чтобы отмечать серии и сохранять заметки.
+          </span>
         </div>
       )}
       {episodes.map((episode) => (
@@ -303,20 +324,20 @@ function EpisodeRow({
   const [text, setText] = useState(note);
   const [saving, setSaving] = useState(false);
   return (
-    <article className="mb-3 rounded-2xl border border-white/5 bg-[#151921] p-5 transition-all duration-300 hover:border-gold/15 hover:shadow-[0_0_20px_rgba(229,169,61,0.06)]">
+    <article className="mb-3 border-2 border-white/10 bg-[var(--panel)] p-5 shadow-[6px_6px_0px_0px_rgba(255,255,255,0.05)] transition-[transform,box-shadow,border-color] duration-150 ease-out hover:-translate-x-0.5 hover:-translate-y-0.5 hover:border-[var(--accent)] hover:shadow-[8px_8px_0px_0px_var(--accent)]">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
-          <h3 className="text-base! font-bold tracking-tight text-white">
-            <span className="mr-2 inline-flex size-7 items-center justify-center rounded-lg border border-gold/20 bg-gold/10 align-middle text-xs font-bold text-gold tabular-nums">
+          <h3 className="text-base font-black uppercase tracking-tight text-[var(--text)]">
+            <span className="mr-2 inline-flex size-7 items-center justify-center border-2 border-[var(--bg)] bg-[var(--accent)] align-middle font-mono text-xs font-black uppercase text-[var(--bg)] shadow-[2px_2px_0px_0px_var(--text)] tabular-nums">
               {episode.number}
             </span>
             {episode.title}
           </h3>
-          <p className="mt-1.5! ml-9! flex flex-wrap items-center gap-2 text-xs text-zinc-500">
+          <p className="mt-1.5 ml-9 flex flex-wrap items-center gap-2 font-mono text-[11px] uppercase tracking-widest text-[var(--subtle)]">
             {episode.air_date && <span>{episode.air_date}</span>}
             {episode.duration && <span>· {episode.duration} мин.</span>}
             {!!rating && (
-              <span className="inline-flex items-center gap-1 rounded-full border border-gold/25 bg-gold/10 px-2 py-0.5 font-semibold text-gold tabular-nums">
+              <span className="inline-flex items-center gap-1 border-2 border-[var(--bg)] bg-[var(--accent)] px-2 py-0.5 font-mono text-[10px] font-black uppercase tracking-widest text-[var(--bg)] shadow-[2px_2px_0px_0px_var(--text)] tabular-nums">
                 <StarIcon className="size-3" aria-hidden="true" />
                 {rating}/10
               </span>
@@ -331,7 +352,7 @@ function EpisodeRow({
             onClick={() => void onWatch()}
             className={
               watched
-                ? "shrink-0 border-emerald-500/30! text-emerald-400! enabled:hover:border-emerald-500/50! enabled:hover:bg-emerald-500/10! enabled:hover:text-emerald-300!"
+                ? "shrink-0 border-2 border-[var(--bg)] bg-[var(--green)]/10 text-[var(--green)] shadow-[3px_3px_0px_0px_var(--green)] enabled:hover:-translate-x-0.5 enabled:hover:-translate-y-0.5 enabled:hover:shadow-[4px_4px_0px_0px_var(--green)]"
                 : "shrink-0"
             }
           >
@@ -345,7 +366,7 @@ function EpisodeRow({
         )}
       </div>
       {episode.description_ru && (
-        <p className="mt-3! ml-9! text-sm leading-relaxed text-zinc-400">
+        <p className="mt-3 ml-9 text-sm leading-relaxed text-[var(--muted)]">
           {episode.description_ru}
         </p>
       )}
@@ -389,7 +410,7 @@ function EpisodeRow({
                 type="button"
                 variant="ghost"
                 disabled={saving}
-                className="shrink-0 text-red-400/70! hover:text-red-400!"
+                className="shrink-0 border-2 border-transparent text-[var(--red)] hover:border-[var(--red)] hover:bg-[var(--red)]/10"
                 onClick={async () => {
                   setSaving(true);
                   try {

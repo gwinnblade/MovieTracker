@@ -1,5 +1,4 @@
 "use client";
-
 import {
   ArrowUpRightIcon,
   PlusIcon,
@@ -30,15 +29,14 @@ import {
 } from "./UI";
 
 const dangerButton =
-  "border-red-500/40! bg-red-500/15! text-red-200! focus-visible:ring-red-500/40! enabled:hover:border-red-500/60! enabled:hover:bg-red-500/25! enabled:hover:text-red-100!";
+  "border-2 border-[var(--red)] bg-[var(--red)]/10 text-[var(--red)] shadow-[4px_4px_0px_0px_var(--red)] enabled:hover:-translate-x-0.5 enabled:hover:-translate-y-0.5 enabled:hover:shadow-[6px_6px_0px_0px_var(--red)]";
 
-const compactButton = "min-h-9! px-3.5! py-2! text-xs!";
+const compactButton = "min-h-9! px-3.5! py-2! text-[11px]!";
 
 export default function Collections() {
   const { user } = useAuth();
   const cache = useQueryClient();
   const [create, setCreate] = useState(false);
-
   const data = useQuery({
     queryKey: ["collections", user?.id],
     queryFn: api.collections,
@@ -48,7 +46,7 @@ export default function Collections() {
   return (
     <RequireAuth>
       <PageHeading
-        eyebrow="ТВОИ ПОДБОРКИ"
+        eyebrow="[ ТВОИ ПОДБОРКИ ]"
         title="Коллекции"
         description="Вечер с друзьями, любимый режиссёр или фильмы на потом. Собирай кино по своему настроению."
       >
@@ -57,10 +55,7 @@ export default function Collections() {
           className="group"
           onClick={() => setCreate(true)}
         >
-          <PlusIcon
-            className="ui-icon transition-transform duration-300 group-hover:rotate-90"
-            aria-hidden="true"
-          />{" "}
+          <PlusIcon className="ui-icon" aria-hidden="true" />
           Создать коллекцию
         </Button>
       </PageHeading>
@@ -73,35 +68,45 @@ export default function Collections() {
         <div className="collections-grid">
           {data.data.map((list) => (
             <Link
-              className="collection-card panel group flex h-full flex-col transform-none! rounded-2xl! transition-all! duration-300! hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(229,169,61,0.15)]!"
+              className="collection-card group flex h-full flex-col border-2 border-white/10 bg-[var(--panel)] p-0 text-[var(--text)] shadow-[8px_8px_0px_0px_rgba(255,255,255,0.05)] transition-all duration-150 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:border-[var(--accent)] hover:shadow-[10px_10px_0px_0px_var(--accent)]"
               key={list.id}
               href={"/collections/" + list.id}
             >
               {list.cover_url ? (
                 <Artwork
-                  className="collection-cover rounded-xl!"
+                  className="collection-cover"
                   src={list.cover_url}
                   alt={list.name}
                 />
               ) : (
-                <div className="collection-cover artwork-placeholder h-auto! rounded-xl!">
-                  <Squares2X2Icon className="ui-icon" aria-hidden="true" />{" "}
-                  <span>Твоя подборка кино</span>
+                <div className="collection-cover artwork-placeholder h-auto border-b-2 border-white/10 bg-[var(--panel)]">
+                  <Squares2X2Icon className="ui-icon" aria-hidden="true" />
+                  <span className="font-mono text-[10px] uppercase tracking-widest">
+                    Твоя подборка кино
+                  </span>
                 </div>
               )}
-              <h3 className="line-clamp-1">{list.name}</h3>
-              <p>{list.description || "Истории, которые стоит сохранить."}</p>
-              <div className="row mt-auto border-t border-white/5 pt-3">
-                <small>{list.media_count} записей</small>
-                <span
-                  className={
-                    list.is_public
-                      ? "inline-flex items-center rounded-md border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-400"
-                      : "inline-flex items-center rounded-md border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-semibold text-zinc-400"
-                  }
-                >
-                  {list.is_public ? "Публичная" : "Личная"}
-                </span>
+              <div className="flex flex-1 flex-col gap-3 p-5">
+                <h3 className="font-black uppercase tracking-tight text-[var(--text)]">
+                  {list.name}
+                </h3>
+                <p className="text-sm text-[var(--muted)]">
+                  {list.description || "Истории, которые стоит сохранить."}
+                </p>
+                <div className="mt-auto flex items-center justify-between border-t-2 border-white/10 pt-3">
+                  <span className="font-mono text-[10px] uppercase tracking-widest text-[var(--muted)]">
+                    {list.media_count} записей
+                  </span>
+                  <span
+                    className={
+                      list.is_public
+                        ? "inline-flex items-center border-2 border-[var(--bg)] bg-[var(--green)] px-2 py-0.5 font-mono text-[10px] font-black uppercase tracking-widest text-[var(--bg)]"
+                        : "inline-flex items-center border-2 border-white/20 bg-white/5 px-2 py-0.5 font-mono text-[10px] font-black uppercase tracking-widest text-[var(--muted)]"
+                    }
+                  >
+                    {list.is_public ? "Публичная" : "Личная"}
+                  </span>
+                </div>
               </div>
             </Link>
           ))}
@@ -149,6 +154,7 @@ function CollectionForm({
     const cover = form.get("cover");
     if (cover instanceof File && !cover.size) form.delete("cover");
     if (form.get("remove_cover")) form.set("remove_cover", "1");
+
     setBusy(true);
     try {
       if (list) await api.updateCollection(list.id, form);
@@ -195,10 +201,7 @@ function CollectionForm({
         </label>
       )}
       <label className="check-label select-none">
-        <Checkbox
-          name="is_public"
-          defaultChecked={list?.is_public || false}
-        />
+        <Checkbox name="is_public" defaultChecked={list?.is_public || false} />
         Публичная — доступна по ссылке
       </label>
       <div className="form-actions">
@@ -264,7 +267,7 @@ export function CollectionDetail({
   return (
     <>
       <PageHeading
-        eyebrow={list.is_public ? "ПУБЛИЧНАЯ ПОДБОРКА" : "ЛИЧНАЯ ПОДБОРКА"}
+        eyebrow={list.is_public ? "[ ПУБЛИЧНАЯ ПОДБОРКА ]" : "[ ЛИЧНАЯ ПОДБОРКА ]"}
         title={list.name}
         description={`${list.media?.length || 0} историй в коллекции`}
       >
@@ -285,15 +288,20 @@ export function CollectionDetail({
       </PageHeading>
 
       {list.description && (
-        <p className="collection-description text-zinc-300! leading-relaxed">
+        <p className="collection-description mb-6 max-w-3xl text-[var(--muted)] leading-relaxed">
           {list.description}
         </p>
       )}
 
       {list.is_public && list.share_token && (
-        <div className="mb-6 flex flex-wrap items-center gap-3 rounded-2xl border border-white/10 bg-[#151921]/80 p-4 shadow-[0_10px_30px_rgba(0,0,0,0.25)] backdrop-blur-md">
-          <span className="text-sm font-semibold text-gold">
-            Поделись этой коллекцией
+        <div className="relative mb-6 flex flex-wrap items-center gap-3 border-2 border-white/10 bg-[var(--panel)] p-5 shadow-[6px_6px_0px_0px_var(--accent)]">
+          {/* Solid accent rule — ticket stub edge */}
+          <div
+            className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-[var(--accent)]"
+            aria-hidden="true"
+          />
+          <span className="font-mono text-[11px] font-black uppercase tracking-widest text-[var(--accent)]">
+            [ Поделись этой коллекцией ]
           </span>
           <Button
             variant="secondary"
@@ -315,13 +323,10 @@ export function CollectionDetail({
           </Button>
           <Link
             href={"/public/lists/" + list.share_token}
-            className="group ml-auto inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-400! transition-colors duration-200 hover:text-gold!"
+            className="group ml-auto inline-flex items-center gap-2 font-mono text-[11px] font-black uppercase tracking-widest text-[var(--muted)] hover:text-[var(--accent)]"
           >
-            Открыть публичную страницу{" "}
-            <ArrowUpRightIcon
-              className="ui-icon transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
-              aria-hidden="true"
-            />
+            Открыть публичную страницу
+            <ArrowUpRightIcon className="ui-icon" aria-hidden="true" />
           </Link>
         </div>
       )}
@@ -335,7 +340,7 @@ export function CollectionDetail({
                 <Button
                   variant="ghost"
                   disabled={busy}
-                  className="mt-2 min-h-9! w-full gap-1.5! rounded-lg! px-3! py-2! text-xs! text-red-400! enabled:hover:bg-red-500/10! enabled:hover:text-red-300!"
+                  className="mt-2 flex w-full items-center justify-center gap-1.5 border-2 border-transparent px-3 py-2 font-mono text-[11px] font-black uppercase tracking-widest text-[var(--red)] hover:border-[var(--red)] hover:bg-[var(--red)]/10"
                   onClick={async () => {
                     setBusy(true);
                     try {
@@ -383,7 +388,7 @@ export function CollectionDetail({
 
       {remove && (
         <Modal title="Удалить коллекцию?" onClose={() => setRemove(false)}>
-          <p className="leading-relaxed text-zinc-300">
+          <p className="leading-relaxed text-[var(--muted)]">
             Коллекция «{list.name}» будет удалена. Личные оценки и прогресс
             просмотра сохранятся.
           </p>

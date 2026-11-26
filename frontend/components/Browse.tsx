@@ -1,5 +1,4 @@
 "use client";
-
 import {
   ArrowRightIcon,
   ArrowUpRightIcon,
@@ -24,15 +23,16 @@ import {
 } from "./UI";
 
 const tabsBar =
-  "flex w-full max-w-full flex-wrap items-center gap-1 rounded-xl border border-white/5 bg-[#151921] p-1 sm:w-fit";
+  "flex w-full max-w-full flex-wrap items-center gap-0 border-2 border-white/10 bg-[var(--panel)] sm:w-fit";
 
 const tabBase =
-  "inline-flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border px-4 py-2.5 text-xs font-semibold outline-none transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-gold/40 sm:flex-none";
+  "inline-flex flex-1 items-center justify-center gap-2 whitespace-nowrap border-r-2 border-white/10 px-5 py-3 font-mono text-[11px] font-black uppercase tracking-widest outline-none transition-[background-color,color,box-shadow] duration-150 ease-out last:border-r-0 sm:flex-none";
 
 const tabActive =
-  "active border-gold/30 bg-gold/10 text-gold! shadow-[0_0_18px_rgba(229,169,61,0.12)]";
+  "active border-r-2 border-white/10 bg-[var(--accent)] text-[var(--bg)] shadow-[4px_4px_0px_0px_var(--text)] sm:shadow-[3px_3px_0px_0px_var(--text)]";
 
-const tabIdle = "border-transparent text-zinc-400! hover:text-white!";
+const tabIdle =
+  "border-r-2 border-white/10 bg-transparent text-[var(--muted)] hover:bg-white/5 hover:text-[var(--text)]";
 
 export default function Browse({ local = false }: { local?: boolean }) {
   const params = useSearchParams();
@@ -112,7 +112,7 @@ export default function Browse({ local = false }: { local?: boolean }) {
   return (
     <>
       <PageHeading
-        eyebrow={local ? "КАТАЛОГ СООБЩЕСТВА" : "ОТКРОЙ НОВУЮ ИСТОРИЮ"}
+        eyebrow={local ? "[ КАТАЛОГ СООБЩЕСТВА ]" : "[ ОТКРОЙ НОВУЮ ИСТОРИЮ ]"}
         title={
           local
             ? "Проверенное кино"
@@ -128,13 +128,10 @@ export default function Browse({ local = false }: { local?: boolean }) {
       >
         {local && (
           <Link
-            className="button group hover:shadow-[0_0_15px_rgba(229,169,61,0.3)]!"
+            className="group inline-flex items-center gap-2 border-2 border-[var(--accent)] bg-[var(--accent)] px-5 py-3 font-mono text-[11px] font-black uppercase tracking-widest text-[var(--bg)] shadow-[4px_4px_0px_0px_var(--text)] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[6px_6px_0px_0px_var(--text)] active:translate-x-0 active:translate-y-0 active:shadow-none"
             href="/suggest"
           >
-            <PlusIcon
-              className="ui-icon transition-transform duration-300 group-hover:rotate-90"
-              aria-hidden="true"
-            />{" "}
+            <PlusIcon className="ui-icon" aria-hidden="true" />
             Предложить фильм
           </Link>
         )}
@@ -155,15 +152,16 @@ export default function Browse({ local = false }: { local?: boolean }) {
             Наш каталог
           </Link>
           {local && (
-            <Link href="/random" className={`${tabBase} ${tabIdle} group`}>
-              Случайный фильм{" "}
-              <ArrowUpRightIcon
-                className="ui-icon transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
-                aria-hidden="true"
-              />
+            <Link
+              href="/random"
+              className={`${tabBase} ${tabIdle} group`}
+            >
+              Случайный
+              <ArrowUpRightIcon className="ui-icon" aria-hidden="true" />
             </Link>
           )}
         </div>
+
         {!local && (
           <div className={tabsBar}>
             {[
@@ -184,14 +182,16 @@ export default function Browse({ local = false }: { local?: boolean }) {
       </div>
 
       <form
-        className="relative mb-8 grid grid-cols-1 gap-4 overflow-hidden rounded-2xl border border-white/5 bg-[#151921]/80 p-5 shadow-[0_18px_50px_rgba(0,0,0,0.35)] backdrop-blur-md sm:grid-cols-2 lg:grid-cols-12"
+        className="relative mb-8 grid grid-cols-1 gap-4 border-2 border-white/10 bg-[var(--panel)] p-6 shadow-[8px_8px_0px_0px_var(--accent)] sm:grid-cols-2 lg:grid-cols-12"
         onSubmit={submit}
         key={`${local}-${query}-${typeId}-${genreId}-${yearFrom}-${yearTo}-${sort}`}
       >
+        {/* Solid accent rule — ticket stub edge */}
         <div
-          className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent"
+          className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-[var(--accent)]"
           aria-hidden="true"
         />
+
         <div
           className={
             local ? "sm:col-span-2 lg:col-span-4" : "sm:col-span-2 lg:col-span-9"
@@ -209,6 +209,7 @@ export default function Browse({ local = false }: { local?: boolean }) {
             />
           </Field>
         </div>
+
         {local && (
           <>
             <div className="lg:col-span-2">
@@ -271,19 +272,17 @@ export default function Browse({ local = false }: { local?: boolean }) {
             </div>
           </>
         )}
+
         <div className="flex flex-col gap-2 sm:col-span-2 lg:col-span-3 lg:col-start-10">
           <span
-            className="hidden select-none text-[11px] font-semibold leading-[1.65] opacity-0 lg:block"
+            className="hidden select-none font-mono text-[11px] uppercase tracking-widest leading-[1.65] opacity-0 lg:block"
             aria-hidden="true"
           >
             &nbsp;
           </span>
           <Button variant="primary" type="submit" className="group w-full">
-            Найти{" "}
-            <ArrowRightIcon
-              className="ui-icon transition-transform duration-200 group-hover:translate-x-0.5"
-              aria-hidden="true"
-            />
+            Найти
+            <ArrowRightIcon className="ui-icon" aria-hidden="true" />
           </Button>
         </div>
       </form>
@@ -314,7 +313,10 @@ export default function Browse({ local = false }: { local?: boolean }) {
               : "Отправь фильм на модерацию — после одобрения он появится здесь."}
           </p>
           {local && (
-            <Link className="button" href="/suggest">
+            <Link
+              className="inline-flex items-center gap-2 border-2 border-[var(--accent)] bg-[var(--accent)] px-5 py-3 font-mono text-[11px] font-black uppercase tracking-widest text-[var(--bg)] shadow-[4px_4px_0px_0px_var(--text)] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[6px_6px_0px_0px_var(--text)] active:translate-x-0 active:translate-y-0 active:shadow-none"
+              href="/suggest"
+            >
               Предложить фильм
             </Link>
           )}

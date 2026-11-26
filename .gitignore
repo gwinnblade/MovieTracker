@@ -28,3 +28,15 @@ instance/*.db-shm
 
 .DS_Store
 Thumbs.db
+
+legacy/
+
+static/uploads/
+
+cookies.txt
+
+backend/.env.backup
+backend/.env.production
+
+backend/.phpstan-cache/
+backend/.pint.cache.json

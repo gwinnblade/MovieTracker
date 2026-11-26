@@ -30,15 +30,33 @@ import {
 } from "./UI";
 
 const shelfClasses =
-  "-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pt-3 pb-2 [&::-webkit-scrollbar]:hidden [scrollbar-width:none]";
+  "-mx-4 flex snap-x snap-mandatory gap-5 overflow-x-auto px-4 pt-4 pb-3 [&::-webkit-scrollbar]:hidden [scrollbar-width:none]";
 
 const shelfItemClasses = "w-[160px] shrink-0 snap-start sm:w-[180px]";
 
 const shelfLinkClasses =
-  "group inline-flex items-center gap-2 text-sm! text-zinc-400! transition-colors hover:text-gold!";
+  "group inline-flex shrink-0 items-center gap-2 font-mono text-[11px] font-black uppercase tracking-widest text-[var(--muted)] transition-colors duration-150 hover:text-[var(--accent)]";
 
 const miniPillClasses =
-  "inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs text-zinc-400";
+  "inline-flex items-center border-2 border-white/20 bg-white/5 px-3 py-1 font-mono text-[10px] font-black uppercase tracking-widest text-[var(--muted)]";
+
+const stampClasses =
+  "inline-block border-2 border-[var(--accent)] bg-[var(--accent)] px-3 py-1 font-mono text-[11px] font-black uppercase tracking-widest text-[var(--bg)]";
+
+const sectionTitleClasses =
+  "text-2xl font-black uppercase leading-none tracking-tighter text-[var(--text)] sm:text-3xl";
+
+const actionLinkClasses =
+  "inline-flex min-h-11 items-center justify-center gap-2 border-2 border-white/20 bg-transparent px-4 py-2.5 font-mono text-[11px] font-black uppercase tracking-widest text-[var(--text)] shadow-[4px_4px_0px_0px_rgba(255,255,255,0.08)] transition-[transform,box-shadow,border-color] duration-150 ease-out hover:-translate-x-0.5 hover:-translate-y-0.5 hover:border-white/40 hover:shadow-[6px_6px_0px_0px_rgba(255,255,255,0.14)] active:translate-x-0 active:translate-y-0 active:shadow-none";
+
+const primaryLinkClasses =
+  "inline-flex min-h-11 items-center justify-center gap-2 border-2 border-[var(--accent)] bg-[var(--accent)] px-4 py-2.5 font-mono text-[11px] font-black uppercase tracking-widest text-[var(--bg)] shadow-[4px_4px_0px_0px_var(--text)] transition-[transform,box-shadow] duration-150 ease-out hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[6px_6px_0px_0px_var(--text)] active:translate-x-0 active:translate-y-0 active:shadow-none";
+
+const barTrackClasses =
+  "h-3 overflow-hidden border-2 border-white/15 bg-[var(--bg)]";
+
+const barFillClasses =
+  "block h-full bg-[var(--accent)] transition-[width] duration-150 ease-out";
 
 export default function Profile({
   statsOnly = false,
@@ -59,41 +77,42 @@ export default function Profile({
     <RequireAuth>
       {statsOnly ? (
         <PageHeading
-          eyebrow="ТВОЯ СТАТИСТИКА"
+          eyebrow="[ ТВОЯ СТАТИСТИКА ]"
           title="История в цифрах"
           description="Каждая оценка и просмотренная серия — часть твоего дневника кино."
         />
       ) : (
         user && (
-          <div className="relative flex flex-wrap items-center gap-6 overflow-hidden rounded-3xl border border-white/5 bg-gradient-to-br from-[#151921] to-[#0B0E14] p-6 sm:p-8">
+          <div className="relative flex flex-wrap items-center gap-6 border-2 border-white/10 bg-[var(--panel)] p-6 shadow-[10px_10px_0px_0px_var(--accent)] sm:p-8">
+            {/* Solid accent rule — ticket stub edge */}
             <div
-              className="pointer-events-none absolute -top-24 -right-24 size-64 rounded-full bg-gold/10 blur-3xl"
+              className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-[var(--accent)]"
               aria-hidden="true"
             />
             <Artwork
               src={user.avatar_url}
               alt={user.name}
-              className="avatar size-24! shrink-0 rounded-full border-2 border-gold/30 shadow-[0_0_30px_rgba(229,169,61,0.2)]!"
+              className="avatar size-24! shrink-0 rounded-none! border-2! border-white/20! shadow-[6px_6px_0px_0px_var(--accent)]!"
             />
-            <div className="relative min-w-0 flex-1">
-              <span className="eyebrow">ТВОЙ ПРОФИЛЬ</span>
-              <h1 className="mt-2! text-3xl! font-bold! tracking-tight! text-white">
+            <div className="min-w-0 flex-1">
+              <span className={stampClasses}>[ Твой профиль ]</span>
+              <h1 className="mt-4 text-3xl font-black uppercase leading-[1.05] tracking-tighter text-[var(--text)] sm:text-4xl">
                 {user.name}
               </h1>
-              <p className="mt-1! text-sm text-zinc-400">
+              <p className="mt-2 font-mono text-[11px] uppercase tracking-widest text-[var(--subtle)]">
                 @{user.login} · {user.email}
               </p>
             </div>
-            <div className="profile-actions relative">
-              <Link className="button secondary" href="/profile/edit">
+            <div className="profile-actions">
+              <Link className={actionLinkClasses} href="/profile/edit">
                 <PencilSquareIcon className="size-4" aria-hidden="true" />
                 Редактировать
               </Link>
-              <Link className="button" href="/suggest">
+              <Link className={actionLinkClasses} href="/suggest">
                 <PlusIcon className="size-4" aria-hidden="true" />
                 Предложить фильм
               </Link>
-              <Link className="button secondary" href="/moderation">
+              <Link className={actionLinkClasses} href="/moderation">
                 <ShieldCheckIcon className="size-4" aria-hidden="true" />
                 {["admin", "moderator"].includes(user.role)
                   ? "Модерация"
@@ -111,7 +130,7 @@ export default function Profile({
       ) : (
         profile && (
           <>
-            <div className="my-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
+            <div className="my-8 grid grid-cols-2 gap-5 lg:grid-cols-4">
               {[
                 {
                   value: profile.stats.total,
@@ -136,24 +155,22 @@ export default function Profile({
               ].map(({ value, name, icon: Icon }) => (
                 <div
                   key={name}
-                  className="group relative overflow-hidden rounded-2xl border border-white/5 bg-gradient-to-br from-[#151921] to-[#0B0E14] p-5 transition-all duration-300 hover:border-gold/20 hover:shadow-[0_0_30px_rgba(229,169,61,0.08)]"
+                  className="relative border-2 border-white/10 bg-[var(--panel)] p-5 shadow-[6px_6px_0px_0px_rgba(255,255,255,0.06)] transition-[transform,box-shadow,border-color] duration-150 ease-out hover:-translate-x-0.5 hover:-translate-y-0.5 hover:border-[var(--accent)] hover:shadow-[8px_8px_0px_0px_var(--accent)]"
                 >
-                  <div className="pointer-events-none absolute -top-8 -right-8 size-20 rounded-full bg-gold/5 opacity-0 blur-2xl transition-opacity duration-300 group-hover:opacity-100" />
-                  <Icon
-                    className="relative mb-3 size-5 text-gold/60"
-                    aria-hidden="true"
-                  />
-                  <strong className="relative block text-4xl leading-none font-bold tracking-tight text-white tabular-nums">
+                  <span className="absolute right-4 top-4 grid size-7 place-items-center border-2 border-white/15 text-[var(--subtle)]">
+                    <Icon className="size-3.5" aria-hidden="true" />
+                  </span>
+                  <strong className="block pr-9 text-4xl font-black leading-none tracking-tighter text-[var(--text)] tabular-nums">
                     {value}
                   </strong>
-                  <span className="relative mt-2 block text-xs tracking-widest text-zinc-500 uppercase">
+                  <span className="mt-3 block border-t-2 border-white/10 pt-3 font-mono text-[10px] font-black uppercase tracking-widest text-[var(--muted)]">
                     {name}
                   </span>
                 </div>
               ))}
             </div>
 
-            <div className="detail-meta">
+            <div className="flex flex-wrap items-center gap-2">
               <span className={miniPillClasses}>
                 {profile.stats.movies} фильмов
               </span>
@@ -168,9 +185,9 @@ export default function Profile({
               </span>
             </div>
 
-            <div className="my-8 grid gap-5 md:grid-cols-2">
-              <section className="rounded-2xl border border-white/5 bg-[#151921] p-6">
-                <h2 className="mb-6! text-xl! font-bold! tracking-tight! text-white">
+            <div className="my-8 grid gap-6 md:grid-cols-2">
+              <section className="border-2 border-white/10 bg-[var(--panel)] p-6 shadow-[8px_8px_0px_0px_rgba(255,255,255,0.06)]">
+                <h2 className="mb-6 border-b-2 border-white/10 pb-4 text-xl font-black uppercase tracking-tight text-[var(--text)]">
                   Статусы просмотра
                 </h2>
                 {profile.stats.statuses.length ? (
@@ -179,30 +196,30 @@ export default function Profile({
                       className="mb-4 grid grid-cols-[110px_1fr_40px] items-center gap-3"
                       key={status.name}
                     >
-                      <span className="truncate text-sm text-zinc-400">
+                      <span className="truncate font-mono text-[10px] font-black uppercase tracking-widest text-[var(--muted)]">
                         {status.name}
                       </span>
-                      <div className="h-2 overflow-hidden rounded-full bg-white/[0.04]">
+                      <div className={barTrackClasses}>
                         <span
-                          className="block h-full rounded-full bg-gradient-to-r from-gold/60 to-gold shadow-[0_0_8px_rgba(229,169,61,0.4)] transition-[width] duration-500"
+                          className={barFillClasses}
                           style={{
                             width: `${(status.count / Math.max(1, profile.stats.total)) * 100}%`,
                           }}
                         />
                       </div>
-                      <b className="text-right text-sm font-semibold text-white tabular-nums">
+                      <b className="text-right font-mono text-sm font-black text-[var(--text)] tabular-nums">
                         {status.count}
                       </b>
                     </div>
                   ))
                 ) : (
-                  <p className="text-sm leading-relaxed text-zinc-500">
+                  <p className="text-sm leading-relaxed text-[var(--muted)]">
                     Добавь первые фильмы в свой список.
                   </p>
                 )}
               </section>
-              <section className="rounded-2xl border border-white/5 bg-[#151921] p-6">
-                <h2 className="mb-6! text-xl! font-bold! tracking-tight! text-white">
+              <section className="border-2 border-white/10 bg-[var(--panel)] p-6 shadow-[8px_8px_0px_0px_rgba(255,255,255,0.06)]">
+                <h2 className="mb-6 border-b-2 border-white/10 pb-4 text-xl font-black uppercase tracking-tight text-[var(--text)]">
                   Любимые жанры
                 </h2>
                 {profile.top_genres.length ? (
@@ -211,24 +228,24 @@ export default function Profile({
                       className="mb-4 grid grid-cols-[110px_1fr_40px] items-center gap-3"
                       key={genre.name_ru}
                     >
-                      <span className="truncate text-sm text-zinc-400">
+                      <span className="truncate font-mono text-[10px] font-black uppercase tracking-widest text-[var(--muted)]">
                         {genre.name_ru}
                       </span>
-                      <div className="h-2 overflow-hidden rounded-full bg-white/[0.04]">
+                      <div className={barTrackClasses}>
                         <span
-                          className="block h-full rounded-full bg-gradient-to-r from-gold/60 to-gold shadow-[0_0_8px_rgba(229,169,61,0.4)] transition-[width] duration-500"
+                          className={barFillClasses}
                           style={{
                             width: `${(genre.count / Math.max(...profile.top_genres.map((g) => g.count))) * 100}%`,
                           }}
                         />
                       </div>
-                      <b className="text-right text-sm font-semibold text-white tabular-nums">
+                      <b className="text-right font-mono text-sm font-black text-[var(--text)] tabular-nums">
                         {genre.count}
                       </b>
                     </div>
                   ))
                 ) : (
-                  <p className="text-sm leading-relaxed text-zinc-500">
+                  <p className="text-sm leading-relaxed text-[var(--muted)]">
                     Жанры появятся после загрузки карточек твоих фильмов.
                   </p>
                 )}
@@ -237,16 +254,11 @@ export default function Profile({
 
             {profile.recent_activity.length ? (
               <section className="section">
-                <div className="section-heading">
-                  <h2 className="text-2xl! font-bold! tracking-tight! text-white">
-                    Недавно добавлено
-                  </h2>
+                <div className="mb-2 flex items-baseline justify-between gap-4 border-b-2 border-white/10 pb-4">
+                  <h2 className={sectionTitleClasses}>Недавно добавлено</h2>
                   <Link href="/entries" className={shelfLinkClasses}>
-                    Весь список{" "}
-                    <ArrowRightIcon
-                      className="size-4 transition-transform group-hover:translate-x-1"
-                      aria-hidden="true"
-                    />
+                    Весь список
+                    <ArrowRightIcon className="size-4" aria-hidden="true" />
                   </Link>
                 </div>
                 <div className={shelfClasses}>
@@ -263,7 +275,7 @@ export default function Profile({
               </section>
             ) : (
               <Empty title="Начни свою историю">
-                <Link href="/catalog" className="button">
+                <Link href="/catalog" className={primaryLinkClasses}>
                   Найти фильм
                 </Link>
               </Empty>
@@ -271,16 +283,11 @@ export default function Profile({
 
             {!!profile.top_rated.length && (
               <section className="section">
-                <div className="section-heading">
-                  <h2 className="text-2xl! font-bold! tracking-tight! text-white">
-                    Твои высокие оценки
-                  </h2>
+                <div className="mb-2 flex items-baseline justify-between gap-4 border-b-2 border-white/10 pb-4">
+                  <h2 className={sectionTitleClasses}>Твои высокие оценки</h2>
                   <Link href="/entries" className={shelfLinkClasses}>
-                    Мой список{" "}
-                    <ArrowRightIcon
-                      className="size-4 transition-transform group-hover:translate-x-1"
-                      aria-hidden="true"
-                    />
+                    Мой список
+                    <ArrowRightIcon className="size-4" aria-hidden="true" />
                   </Link>
                 </div>
                 <div className={shelfClasses}>
@@ -330,8 +337,13 @@ export function EditProfile() {
 
   return (
     <RequireAuth>
-      <PageHeading eyebrow="НАСТРОЙКИ АККАУНТА" title="Твой профиль" />
-      <div className="mx-auto max-w-2xl rounded-2xl border border-white/5 bg-[#151921] p-6 sm:p-8">
+      <PageHeading eyebrow="[ НАСТРОЙКИ АККАУНТА ]" title="Твой профиль" />
+      <div className="relative mx-auto max-w-2xl border-2 border-white/10 bg-[var(--panel)] p-6 shadow-[10px_10px_0px_0px_var(--accent)] sm:p-8">
+        {/* Solid accent rule — ticket stub edge */}
+        <div
+          className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-[var(--accent)]"
+          aria-hidden="true"
+        />
         {user && (
           <form className="form-stack" onSubmit={submit}>
             <div className="form-row">
@@ -378,11 +390,9 @@ export function EditProfile() {
               </label>
             )}
 
-            <div className="mt-8 border-t border-white/5 pt-8">
-              <h2 className="mb-6! text-xl! font-bold! tracking-tight! text-white">
-                Изменить пароль
-              </h2>
-              <div className="form-stack">
+            <div className="mt-8 border-t-2 border-white/10 pt-8">
+              <span className={stampClasses}>[ Смена пароля ]</span>
+              <div className="form-stack mt-6">
                 <Field label="Текущий пароль">
                   <Input
                     name="current_password"
@@ -411,11 +421,11 @@ export function EditProfile() {
               </div>
             </div>
 
-            <div className="flex flex-col gap-2 sm:flex-row sm:pt-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:pt-4">
               <Button type="submit" variant="primary" disabled={busy}>
                 {busy ? "Сохраняем…" : "Сохранить профиль"}
               </Button>
-              <Link href="/profile" className="button secondary min-h-12!">
+              <Link href="/profile" className={actionLinkClasses}>
                 Назад
               </Link>
             </div>
